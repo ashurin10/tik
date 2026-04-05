@@ -53,7 +53,7 @@ class LaporanAktivitasKerjaController extends Controller
                     'jam_mulai' => '07:30:00',
                     'jam_selesai' => '08:00:00',
                     'uraian_kegiatan' => $namaKegiatanOtomatis,
-                    'keterangan' => 'tj',
+                    'keterangan' => 'tt', // Apel Pagi & Jum'at Bersih = Tugas Tambahan
                 ]);
             }
         }
@@ -180,7 +180,13 @@ class LaporanAktivitasKerjaController extends Controller
             'laporan_mingguan_id' => 'nullable|integer',
         ]);
 
-        $validated['keterangan'] = $validated['keterangan'] ?? 'tj';
+        // Auto-set 'tt' untuk Apel Pagi dan Jum'at Bersih
+        $uraian = $validated['uraian_kegiatan'] ?? '';
+        if (stripos($uraian, 'Apel Pagi') !== false || stripos($uraian, "Jum'at Bersih") !== false) {
+            $validated['keterangan'] = 'tt';
+        } else {
+            $validated['keterangan'] = $validated['keterangan'] ?? 'tj';
+        }
 
         // Hanya auto-adjust jam_mulai jika ditambahkan massal dari Laporan Mingguan,
         // namun jika uraian manualnya BUKAN Apel Pagi / Jum'at Bersih, kita bisa sesuaikan.
@@ -248,7 +254,13 @@ class LaporanAktivitasKerjaController extends Controller
             'keterangan' => 'nullable|string',
         ]);
 
-        $validated['keterangan'] = $validated['keterangan'] ?? 'tj';
+        // Auto-set 'tt' untuk Apel Pagi dan Jum'at Bersih
+        $uraian = $validated['uraian_kegiatan'] ?? '';
+        if (stripos($uraian, 'Apel Pagi') !== false || stripos($uraian, "Jum'at Bersih") !== false) {
+            $validated['keterangan'] = 'tt';
+        } else {
+            $validated['keterangan'] = $validated['keterangan'] ?? 'tj';
+        }
 
         $laporanAktivitasKerja->update($validated);
 

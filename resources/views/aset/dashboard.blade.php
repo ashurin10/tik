@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Dashboard Aset">
     <div class="p-6">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>

@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :title="'LAK - ' . $pic">
     <div x-data="{ 
         showModal: false, 
         showCetakModal: false,
@@ -97,6 +97,80 @@
             </div>
         </div>
 
+        {{-- Ringkasan Total Aktivitas --}}
+        @if(count($laks) > 0)
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            @php
+                $totalAll = 0;
+                $tjMin = 0; $tjCnt = 0;
+                $ttMin = 0; $ttCnt = 0;
+                foreach($laks as $r) {
+                    $s = \Carbon\Carbon::parse($r->tanggal . ' ' . $r->jam_mulai);
+                    $e = \Carbon\Carbon::parse($r->tanggal . ' ' . $r->jam_selesai);
+                    $m = $s->diffInMinutes($e);
+                    $isJum = \Carbon\Carbon::parse($r->tanggal)->dayOfWeekIso == 5;
+                    $bS = \Carbon\Carbon::parse($r->tanggal . ($isJum ? ' 11:30:00' : ' 12:00:00'));
+                    $bE = \Carbon\Carbon::parse($r->tanggal . ' 13:00:00');
+                    $oS = $s->copy()->max($bS);
+                    $oE = $e->copy()->min($bE);
+                    if ($oS < $oE) { $m -= $oS->diffInMinutes($oE); }
+                    $totalAll += $m;
+                    $k = strtolower(trim($r->keterangan ?? ''));
+                    if ($k === 'tj') { $tjMin += $m; $tjCnt++; }
+                    elseif ($k === 'tt') { $ttMin += $m; $ttCnt++; }
+                }
+            @endphp
+
+            {{-- Card Total Keseluruhan --}}
+            <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 text-white shadow-lg shadow-blue-200">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-bold uppercase tracking-widest text-blue-200">Total Aktivitas</span>
+                    <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center">
+                        <i class="fas fa-layer-group text-sm"></i>
+                    </div>
+                </div>
+                <div class="text-3xl font-black">{{ count($laks) }}</div>
+                <div class="text-blue-200 text-xs mt-1 font-semibold">Kegiatan &bull; {{ $totalAll }} menit ({{ number_format($totalAll/60, 1) }} jam)</div>
+            </div>
+
+            {{-- Card TJ --}}
+            <div class="bg-white rounded-2xl p-5 border border-indigo-100 shadow-md shadow-indigo-100/50">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <span class="text-xs font-black uppercase tracking-widest text-indigo-500">TJ</span>
+                        <p class="text-[11px] text-gray-400 font-semibold">Tugas Jabatan</p>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center">
+                        <i class="fas fa-briefcase text-indigo-500 text-sm"></i>
+                    </div>
+                </div>
+                <div class="text-3xl font-black text-gray-800">{{ $tjCnt }}</div>
+                <div class="flex items-center justify-between mt-1">
+                    <span class="text-gray-400 text-xs font-semibold">{{ $tjMin }} menit &bull; {{ number_format($tjMin/60, 1) }} jam</span>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">{{ $totalAll > 0 ? round($tjMin / $totalAll * 100) : 0 }}%</span>
+                </div>
+            </div>
+
+            {{-- Card TT --}}
+            <div class="bg-white rounded-2xl p-5 border border-emerald-100 shadow-md shadow-emerald-100/50">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <span class="text-xs font-black uppercase tracking-widest text-emerald-500">TT</span>
+                        <p class="text-[11px] text-gray-400 font-semibold">Tugas Tambahan</p>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+                        <i class="fas fa-plus-circle text-emerald-500 text-sm"></i>
+                    </div>
+                </div>
+                <div class="text-3xl font-black text-gray-800">{{ $ttCnt }}</div>
+                <div class="flex items-center justify-between mt-1">
+                    <span class="text-gray-400 text-xs font-semibold">{{ $ttMin }} menit &bull; {{ number_format($ttMin/60, 1) }} jam</span>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">{{ $totalAll > 0 ? round($ttMin / $totalAll * 100) : 0 }}%</span>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden">
             <table class="w-full text-left border-collapse">
                 <thead>
@@ -114,6 +188,10 @@
                         $currentDate = ''; 
                         $dailyTotal = 0;
                         $totalMonth = 0;
+                        $totalTJ = 0;
+                        $totalTT = 0;
+                        $countTJ = 0;
+                        $countTT = 0;
                     @endphp
                     @forelse($laks as $index => $row)
                         @php
@@ -141,6 +219,15 @@
                             $currentDate = $row->tanggal;
                             $dailyTotal += $minutes;
                             $totalMonth += $minutes;
+                            
+                            $ket = strtolower(trim($row->keterangan ?? ''));
+                            if ($ket === 'tj') {
+                                $totalTJ += $minutes;
+                                $countTJ++;
+                            } elseif ($ket === 'tt') {
+                                $totalTT += $minutes;
+                                $countTT++;
+                            }
                             
                             $lakData = [
                                 'id' => $row->id,
@@ -230,7 +317,21 @@
                     
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">Keterangan</label>
-                        <input type="text" name="keterangan" x-model="form.keterangan" class="w-full bg-[#f4f5f7] border-0 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+                        <div class="relative">
+                            <input type="text" name="keterangan" x-model="form.keterangan"
+                                x-effect="
+                                    const u = form.uraian_kegiatan.toLowerCase();
+                                    if (u.includes('apel pagi') || u.includes(\"jum'at bersih\")) {
+                                        form.keterangan = 'tt';
+                                    }
+                                "
+                                class="w-full bg-[#f4f5f7] border-0 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"
+                                placeholder="tj / tt">
+                            <span x-show="form.uraian_kegiatan.toLowerCase().includes('apel pagi') || form.uraian_kegiatan.toLowerCase().includes(\"jum'at bersih\")"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                                Auto: TT
+                            </span>
+                        </div>
                     </div>
                     
                     <div class="pt-4 flex justify-end gap-2">

@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :title="'Edit Aset — ' . $aset->nama_aset">
     <div class="p-6">
         <div class="flex items-center justify-between mb-6">
             <div>

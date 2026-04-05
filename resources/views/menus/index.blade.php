@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Manajemen Menu">
     <div x-data="{ showCreateModal: false, showEditModal: false }" class="p-6" x-cloak>
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>

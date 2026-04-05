@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Laporan Mingguan">
     <div x-data="{ 
         showModal: false, 
         editId: null,

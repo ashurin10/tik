@@ -169,6 +169,8 @@
                 $currentDate = ''; 
                 $dailyTotal = 0;
                 $totalMonth = 0;
+                $totalTJ = 0;
+                $totalTT = 0;
                 $no = 1;
                 $rowCount = 0;
             @endphp
@@ -199,6 +201,10 @@
                     $currentDate = $row->tanggal;
                     $dailyTotal += $minutes;
                     $totalMonth += $minutes;
+                    
+                    $ket = strtolower(trim($row->keterangan ?? ''));
+                    if ($ket === 'tj') { $totalTJ += $minutes; }
+                    elseif ($ket === 'tt') { $totalTT += $minutes; }
                 @endphp
                 <tr>
                     @if($isNewDate)
@@ -230,17 +236,17 @@
             
             <!-- Footer Totals -->
             <tr>
-                <td colspan="5" class="text-center font-bold">Total Aktivitas</td>
-                <td class="text-center font-bold">{{ $totalMonth }}</td>
-                <td class="text-center font-bold">100%</td>
+                <td colspan="5" class="text-center font-bold">Total Aktivitas TJ (Tugas Jabatan)</td>
+                <td class="text-center font-bold">{{ $totalTJ }}</td>
+                <td class="text-center font-bold">{{ $totalMonth > 0 ? round($totalTJ / $totalMonth * 100) : 0 }}%</td>
             </tr>
             <tr>
-                <td colspan="5" class="text-center font-bold">Total Aktivitas</td>
-                <td class="text-center font-bold">0</td>
-                <td class="text-center font-bold">0%</td>
+                <td colspan="5" class="text-center font-bold">Total Aktivitas TT (Tugas Tambahan)</td>
+                <td class="text-center font-bold">{{ $totalTT }}</td>
+                <td class="text-center font-bold">{{ $totalMonth > 0 ? round($totalTT / $totalMonth * 100) : 0 }}%</td>
             </tr>
             <tr>
-                <td colspan="5" class="text-center font-bold">Total Aktivitas</td>
+                <td colspan="5" class="text-center font-bold">Total Aktivitas (TJ + TT)</td>
                 <td class="text-center font-bold">{{ $totalMonth }}</td>
                 <td class="text-center font-bold"></td>
             </tr>

@@ -22,7 +22,12 @@ class UpdateMasterAsetRequest extends FormRequest
             'status' => 'required|in:Aktif,Dipinjam,Maintenance,Pensiun',
             'unit_pengguna' => 'required|string',
             'penanggung_jawab' => 'required|string',
+            'merk' => 'nullable|string|max:255',
+            'model_tipe' => 'nullable|string|max:255',
+            'nomor_seri' => 'nullable|string|max:255',
             'pemilik_aset' => 'nullable|string|max:255',
+            'lokasi' => 'nullable|string|max:255',
+            'catatan' => 'nullable|string',
             'spesifikasi' => 'nullable|array',
         ];
     }

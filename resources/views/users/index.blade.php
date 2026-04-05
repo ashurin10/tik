@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Manajemen Pengguna">
     <div x-data="{ showCreateModal: false, showEditModal: false }" class="p-6" x-cloak>
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
@@ -148,8 +148,9 @@
     <!-- Create Modal -->
     <div x-show="showCreateModal" style="display: none;" 
         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm" 
-        x-transition x-cloak>
-        <div @click.away="showCreateModal = false"
+        x-transition x-cloak
+        @click.self="showCreateModal = false">
+        <div
             class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
             
             <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-sm z-10">
@@ -226,8 +227,9 @@
     <!-- Edit Modal -->
     <div x-show="showEditModal" style="display: none;" 
         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm" 
-        x-transition x-cloak>
-        <div @click.away="showEditModal = false"
+        x-transition x-cloak
+        @click.self="showEditModal = false">
+        <div
             class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
             
             <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-sm z-10">
