@@ -16,7 +16,8 @@ class MasterAsetService
             $query->where(function ($q) use ($search) {
                 $q->where('nama_aset', 'like', "%{$search}%")
                     ->orWhere('kode_aset', 'like', "%{$search}%")
-                    ->orWhere('merk', 'like', "%{$search}%");
+                    ->orWhere('merk', 'like', "%{$search}%")
+                    ->orWhere('nomor_seri', 'like', "%{$search}%");
             });
         }
 
@@ -36,7 +37,7 @@ class MasterAsetService
         $headers = [
             'nama_aset', 'tahun_pengadaan(YYYY)', 'kategori(Hardware/Software/Jaringan)', 'jenis', 'merk',
             'model_tipe', 'nomor_seri', 'kondisi(Baik/Cukup/Rusak)',
-            'status(Aktif/Dipinjam/Maintenance/Pensiun)', 'unit_pengguna',
+            'status(Aktif/Terpakai/Maintenance/Pensiun)', 'unit_pengguna',
             'penanggung_jawab', 'pemilik_aset', 'lokasi', 'catatan'
         ];
 
@@ -64,11 +65,14 @@ class MasterAsetService
             $importedCount = 0;
             $year = date('Y');
 
+            // Find the true absolute last sequence for this year pattern
+            $lastAsset = AsetTik::where('kode_aset', 'like', "INV-{$year}-%")->orderBy('id', 'desc')->first();
+            $sequence = $lastAsset ? intval(substr($lastAsset->kode_aset, -3)) : 0;
+
             foreach ($data as $row) {
                 if (count($row) < 14 || empty(trim($row[0]))) continue;
 
-                $lastAsset = AsetTik::whereYear('created_at', $year)->latest('id')->first();
-                $sequence = $lastAsset ? intval(substr($lastAsset->kode_aset, -3)) + 1 : 1;
+                $sequence++;
                 $kodeAset = 'INV-' . $year . '-' . str_pad($sequence, 3, '0', STR_PAD_LEFT);
 
                 AsetTik::create([
@@ -102,11 +106,12 @@ class MasterAsetService
     {
         DB::beginTransaction();
         try {
-            $year = date('Y');
-            $lastAsset = AsetTik::whereYear('created_at', $year)->latest('id')->first();
-            $sequence = $lastAsset ? intval(substr($lastAsset->kode_aset, -3)) + 1 : 1;
-            
-            $data['kode_aset'] = 'INV-' . $year . '-' . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+            if (empty($data['kode_aset'])) {
+                $year = date('Y');
+                $lastAsset = AsetTik::whereYear('created_at', $year)->latest('id')->first();
+                $sequence = $lastAsset ? intval(substr($lastAsset->kode_aset, -3)) + 1 : 1;
+                $data['kode_aset'] = 'INV-' . $year . '-' . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+            }
 
             if (isset($data['spesifikasi']) && is_array($data['spesifikasi'])) {
                 $specs = array_filter($data['spesifikasi'], fn($value) => !is_null($value) && $value !== '');

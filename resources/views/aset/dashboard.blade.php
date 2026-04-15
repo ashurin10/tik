@@ -56,7 +56,7 @@
                 </div>
             </div>
 
-            <!-- Kondisi Rusak / Dipinjam -->
+            <!-- Kondisi Rusak / Terpakai -->
             <div
                 class="bg-white p-6 rounded-3xl shadow-lg shadow-red-100/50 flex flex-col justify-between h-32 relative overflow-hidden">
                 <div class="relative z-10">

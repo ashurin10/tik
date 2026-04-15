@@ -88,8 +88,17 @@ class MasterAsetController extends Controller
 
     public function destroy(AsetTik $asetTik)
     {
-        $asetTik->delete();
-        return redirect()->route('aset.master.data.index')->with('success', 'Aset berhasil dihapus.');
+        try {
+            $asetTik->delete();
+            return redirect()->route('aset.master.data.index')->with('success', 'Aset berhasil dihapus.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() == "23000") {
+                return back()->with('error', 'Gagal menghapus! Aset ini sedang terkait dengan data transaksi (Peminjaman/Masuk/Maintenance).');
+            }
+            return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus aset: ' . $e->getMessage());
+        }
     }
 
     public function printLabel(AsetTik $asetTik)

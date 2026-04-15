@@ -14,7 +14,7 @@ class DashboardController extends Controller
         $totalAset = AsetTik::count();
         $asetKeluarHariIni = 0; // Placeholder until mutasi table exists
         $asetJatuhTempo = 0; // Placeholder until peminjaman table exists
-        $asetDipinjam = AsetTik::where('status', 'Dipinjam')->count();
+        $asetDipinjam = AsetTik::where('status', 'Terpakai')->count();
         $asetRusak = AsetTik::where('kondisi', 'Rusak')->count();
 
         // Distribusi Kategori

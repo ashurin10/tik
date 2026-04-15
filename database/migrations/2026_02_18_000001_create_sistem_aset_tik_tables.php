@@ -30,7 +30,7 @@ return new class extends Migration {
             $table->year('tahun_pengadaan')->nullable();
             $table->date('garansi_sampai')->nullable();
             $table->enum('kondisi', ['Baik', 'Cukup', 'Rusak'])->default('Baik');
-            $table->enum('status', ['Aktif', 'Dipinjam', 'Maintenance', 'Pensiun', 'Dihapus'])->default('Aktif');
+            $table->enum('status', ['Aktif', 'Terpakai', 'Maintenance', 'Pensiun', 'Dihapus'])->default('Aktif');
 
             // Kepemilikan & Lokasi
             $table->string('unit_pengguna')->nullable(); // Nama Unit/Divisi

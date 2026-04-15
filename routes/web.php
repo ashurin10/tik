@@ -80,8 +80,14 @@ Route::middleware(['auth', 'verified'])->prefix('aset')->name('aset.')->group(fu
 
     // Modul 3: Mutasi
     Route::prefix('mutasi')->name('mutasi.')->group(function () {
+        Route::get('/penerimaan', [\App\Http\Controllers\Asset\MutasiController::class, 'penerimaan'])->name('penerimaan.index');
+        Route::get('/penerimaan/create', [\App\Http\Controllers\Asset\MutasiController::class, 'createPenerimaan'])->name('penerimaan.create');
+        Route::post('/penerimaan/store', [\App\Http\Controllers\Asset\MutasiController::class, 'storePenerimaanAset'])->name('penerimaan.storeAset');
+        Route::post('/penerimaan/import', [\App\Http\Controllers\Asset\MutasiController::class, 'importPenerimaan'])->name('penerimaan.import');
         Route::get('/check-out', [\App\Http\Controllers\Asset\MutasiController::class, 'checkout'])->name('checkout.index');
+        Route::post('/check-out', [\App\Http\Controllers\Asset\MutasiController::class, 'storeCheckout'])->name('checkout.store');
         Route::get('/check-in', [\App\Http\Controllers\Asset\MutasiController::class, 'checkin'])->name('checkin.index');
+        Route::post('/check-in', [\App\Http\Controllers\Asset\MutasiController::class, 'storeCheckin'])->name('checkin.store');
         Route::get('/approval', [\App\Http\Controllers\Asset\MutasiController::class, 'approval'])->name('approval.index');
     });
 

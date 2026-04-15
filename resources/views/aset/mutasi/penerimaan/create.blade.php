@@ -2,7 +2,7 @@
     <div class="p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Registrasi Aset Baru</h1>
+                <h1 class="text-2xl font-bold text-gray-800">Tambah Aset Masuk (Penerimaan)</h1>
                 <p class="text-gray-500 text-sm">Tambahkan aset TIK baru ke dalam inventaris.</p>
             </div>
             <a href="{{ route('aset.master.data.index') }}" class="text-gray-500 hover:text-gray-700 font-medium">
@@ -39,7 +39,7 @@
             </div>
         @endif
 
-        <form action="{{ route('aset.master.data.store') }}" method="POST" enctype="multipart/form-data"
+        <form action="{{ route('aset.mutasi.penerimaan.storeAset') }}" method="POST" enctype="multipart/form-data"
             x-data="{ activeTab: '{{ (request('nomor_seri') && !request('nama_aset')) ? 'specs' : 'info' }}' }" class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden">
             @csrf
 
@@ -60,6 +60,33 @@
             <div class="p-8">
                 <!-- Tab 1: Info Dasar -->
                 <div x-show="activeTab === 'info'" class="space-y-6">
+                    
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-6 shadow-sm">
+                        <h4 class="font-bold text-indigo-800 mb-4 pb-2 border-b border-indigo-200"><i class="fas fa-truck-loading mr-2"></i>Informasi Penerimaan Baru</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div>
+                                <label class="block text-[0.7rem] font-bold text-indigo-700 mb-1.5 ml-1">Sumber Aset <span class="text-red-500">*</span></label>
+                                <select name="sumber_aset" required class="w-full bg-white border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 shadow-sm">
+                                    <option value="">Pilih Sumber...</option>
+                                    <option value="Pembelian Baru" {{ old('sumber_aset') == 'Pembelian Baru' ? 'selected' : '' }}>Pembelian Baru</option>
+                                    <option value="Mutasi Masuk Pindah HO" {{ old('sumber_aset') == 'Mutasi Masuk Pindah HO' ? 'selected' : '' }}>Mutasi Masuk / Pindahan</option>
+                                    <option value="Hibah / Hadiah" {{ old('sumber_aset') == 'Hibah / Hadiah' ? 'selected' : '' }}>Hibah / Hadiah</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[0.7rem] font-bold text-indigo-700 mb-1.5 ml-1">Tanggal Masuk <span class="text-red-500">*</span></label>
+                                <input type="date" name="tanggal_masuk" value="{{ old('tanggal_masuk', date('Y-m-d')) }}" required
+                                    class="w-full bg-white border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-[0.7rem] font-bold text-indigo-700 mb-1.5 ml-1">Diterima Oleh <span class="text-red-500">*</span></label>
+                                <input type="text" name="diterima_oleh" value="{{ old('diterima_oleh', Auth::user()->name ?? '') }}" required
+                                    class="w-full bg-white border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 shadow-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-gray-800 mb-4 ml-1">Detail Aset TIK</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-[0.7rem] font-medium text-gray-500 mb-1.5 ml-1">Kode Aset / Label Barang</label>

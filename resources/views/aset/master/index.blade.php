@@ -1,5 +1,5 @@
 <x-app-layout title="Master Data Aset">
-    <div x-data="{ showImportModal: false, showDeleteModal: false, deleteId: null, deleteName: '', showQrModal: false }" class="p-6">
+    <div x-data="{ showImportModal: false, showDeleteModal: false, deleteHashid: '', deleteName: '', showQrModal: false }" class="p-6">
 
         @if(session('success'))
             <div class="mb-4 bg-green-50 text-green-700 p-4 rounded-xl border-l-4 border-green-500 font-bold flex items-center gap-3">
@@ -51,7 +51,7 @@
                 <select name="status" class="border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500">
                     <option value="">Semua Status</option>
                     <option value="Aktif" {{ request('status') == 'Aktif' ? 'selected' : '' }}>Aktif</option>
-                    <option value="Dipinjam" {{ request('status') == 'Dipinjam' ? 'selected' : '' }}>Dipinjam</option>
+                    <option value="Terpakai" {{ request('status') == 'Terpakai' ? 'selected' : '' }}>Terpakai</option>
                     <option value="Rusak" {{ request('status') == 'Rusak' ? 'selected' : '' }}>Rusak</option>
                 </select>
                 <button type="submit" class="bg-gray-100 text-gray-600 font-bold px-4 rounded-xl hover:bg-gray-200 transition">
@@ -82,6 +82,11 @@
                                     <div class="text-xs text-blue-600 font-mono bg-blue-50 inline-block px-2 py-0.5 rounded mt-1">
                                         {{ $aset->kode_aset }}
                                     </div>
+                                    @if($aset->nomor_seri)
+                                        <div class="text-xs text-gray-500 font-mono mt-1">
+                                            SN: {{ $aset->nomor_seri }}
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="p-4">
                                     <span class="text-sm text-gray-600">{{ $aset->kategori }}</span>
@@ -104,7 +109,7 @@
                                     @php
                                         $statusClass = match ($aset->status) {
                                             'Aktif'       => 'bg-green-100 text-green-700',
-                                            'Dipinjam'    => 'bg-blue-100 text-blue-700',
+                                            'Terpakai'    => 'bg-blue-100 text-blue-700',
                                             'Maintenance' => 'bg-orange-100 text-orange-700',
                                             'Pensiun'     => 'bg-red-100 text-red-700',
                                             default       => 'bg-gray-100 text-gray-700',
@@ -129,7 +134,7 @@
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button
-                                            @click="showDeleteModal = true; deleteId = {{ $aset->id }}; deleteName = '{{ addslashes($aset->nama_aset) }}'"
+                                            @click="showDeleteModal = true; deleteHashid = '{{ $aset->hashid }}'; deleteName = '{{ addslashes($aset->nama_aset) }}'"
                                             class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Hapus">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -162,7 +167,7 @@
                 class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
                 <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-red-50">
                     <h3 class="text-lg font-bold text-red-700"><i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>Konfirmasi Hapus</h3>
-                    <button @click="showDeleteModal = false" class="text-gray-400 hover:text-red-500 transition">
+                    <button type="button" @click="showDeleteModal = false" class="text-gray-400 hover:text-red-500 transition">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
@@ -177,7 +182,7 @@
                 <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
                     <button type="button" @click="showDeleteModal = false"
                         class="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition">Batal</button>
-                    <form :action="'{{ url('aset/master/data') }}/' + deleteId" method="POST">
+                    <form :action="'{{ url('aset/master/data') }}/' + deleteHashid" method="POST">
                         @csrf
                         @method('DELETE')
                         <button type="submit"

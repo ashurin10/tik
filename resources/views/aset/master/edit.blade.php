@@ -44,6 +44,11 @@
                 <div x-show="activeTab === 'info'" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
+                            <label class="block text-[0.7rem] font-medium text-gray-500 mb-1.5 ml-1">Kode Aset / Label Barang <span class="text-xs text-gray-400 font-normal">(Tidak dapat diubah)</span></label>
+                            <input type="text" value="{{ $aset->kode_aset }}" readonly disabled
+                                class="w-full bg-gray-100 border-0 rounded-xl px-4 py-3 text-sm text-gray-500 cursor-not-allowed">
+                        </div>
+                        <div>
                             <label class="block text-[0.7rem] font-medium text-gray-500 mb-1.5 ml-1">Nama Aset <span
                                     class="text-red-500">*</span></label>
                             <input type="text" name="nama_aset" value="{{ old('nama_aset', $aset->nama_aset) }}"
@@ -111,7 +116,7 @@
                             <select name="status"
                                 class="w-full bg-[#f4f5f7] border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all text-gray-700"
                                 required>
-                                @foreach(['Aktif', 'Dipinjam', 'Maintenance', 'Pensiun'] as $stat)
+                                @foreach(['Aktif', 'Terpakai', 'Maintenance', 'Pensiun'] as $stat)
                                     <option value="{{ $stat }}" {{ old('status', $aset->status) == $stat ? 'selected' : '' }}>
                                         {{ $stat }}
                                     </option>
