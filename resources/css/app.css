@@ -2,4 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
+@import 'tom-select/dist/css/tom-select.css';
+
 [x-cloak] { display: none !important; }
