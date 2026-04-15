@@ -29,7 +29,7 @@
                     <form action="{{ route('aset.mutasi.checkin.store') }}" method="POST" class="space-y-5 relative z-10">
                         @csrf
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Aset Terdistribusi (Di Lapangan)</label>
+                            <label for="select-aset-tarik" class="block text-sm font-medium text-gray-600 mb-1">Aset Terdistribusi (Di Lapangan)</label>
                             <select id="select-aset-tarik" name="peminjaman_id" required class="w-full bg-gray-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500 font-medium text-gray-700">
                                 <option value="">Pilih Aset Keluar...</option>
                                 @foreach($peminjaman as $trx)
@@ -45,14 +45,14 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal Ditarik</label>
-                            <input type="date" name="tanggal_kembali" value="{{ date('Y-m-d') }}" required
+                            <label for="tanggal_kembali" class="block text-sm font-medium text-gray-600 mb-1">Tanggal Ditarik</label>
+                            <input id="tanggal_kembali" type="date" name="tanggal_kembali" value="{{ date('Y-m-d') }}" required
                                 class="w-full bg-gray-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Kondisi Saat Dikembalikan</label>
-                            <select name="kondisi_saat_kembali" required class="w-full bg-gray-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500">
+                            <label for="kondisi_saat_kembali" class="block text-sm font-medium text-gray-600 mb-1">Kondisi Saat Dikembalikan</label>
+                            <select id="kondisi_saat_kembali" name="kondisi_saat_kembali" required class="w-full bg-gray-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500">
                                 <option value="Baik">Baik</option>
                                 <option value="Cukup">Cukup (Minor Defect)</option>
                                 <option value="Rusak">Rusak</option>

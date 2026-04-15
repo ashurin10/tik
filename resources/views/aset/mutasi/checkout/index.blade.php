@@ -29,7 +29,7 @@
                     <form action="{{ route('aset.mutasi.checkout.store') }}" method="POST" class="space-y-5 relative z-10">
                         @csrf
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Aset Tersedia Gudang (Aktif)</label>
+                            <label for="select-aset" class="block text-sm font-medium text-gray-600 mb-1">Aset Tersedia Gudang (Aktif)</label>
                             <select id="select-aset" name="aset_id" required class="w-full bg-gray-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-500 font-medium text-gray-700">
                                 <option value="">Pilih Aset...</option>
                                 @foreach($assets as $aset)
@@ -42,14 +42,14 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Tujuan OPD / Lokasi Pemasangan</label>
-                            <input type="text" name="nama_peminjam" required placeholder="Contoh: Diskominfo, Kec. Buleleng"
+                            <label for="nama_peminjam" class="block text-sm font-medium text-gray-600 mb-1">Tujuan OPD / Lokasi Pemasangan</label>
+                            <input id="nama_peminjam" type="text" name="nama_peminjam" required placeholder="Contoh: Diskominfo, Kec. Buleleng"
                                 class="w-full bg-gray-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-500">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal Keluar / Pemasangan</label>
-                            <input type="date" name="tanggal_pinjam" value="{{ date('Y-m-d') }}" required
+                            <label for="tanggal_pinjam" class="block text-sm font-medium text-gray-600 mb-1">Tanggal Keluar / Pemasangan</label>
+                            <input id="tanggal_pinjam" type="date" name="tanggal_pinjam" value="{{ date('Y-m-d') }}" required
                                 class="w-full bg-gray-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-500">
                         </div>
 
