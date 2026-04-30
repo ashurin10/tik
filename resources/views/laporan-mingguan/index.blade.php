@@ -21,8 +21,17 @@
         showAiModal: false,
         rawText: '',
         isAnalyzing: false,
+        isSaving: false,
+        parsedResults: [],
+        selectedResults: [],
+        aiStep: 'input',
+        cameFromAiModal: false,
+        aiEditingIndex: null,
         openAiModal() {
             this.rawText = '';
+            this.parsedResults = [];
+            this.selectedResults = [];
+            this.aiStep = 'input';
             this.showAiModal = true;
         },
         async parseRawText() {
@@ -39,26 +48,63 @@
                     body: JSON.stringify({ text: this.rawText })
                 });
                 const data = await response.json();
-                
-                this.form.tanggal = data.tanggal || '';
-                this.form.nama_kegiatan = data.nama_kegiatan || '';
-                this.form.lokasi = data.lokasi || '';
-                this.form.prioritas = data.prioritas || 'Sedang';
-                this.form.status = data.status || 'Berjalan';
-                this.form.hasil_deskripsi = data.hasil_deskripsi || '';
-                this.form.keterangan_tindak_lanjut = data.keterangan_tindak_lanjut || '';
-                
-                this.pics = data.pic ? data.pic.split(/(?:dan|&|,)/i).map(p => p.trim()).filter(p => p) : [];
-                
-                this.showAiModal = false;
-                this.editId = null; 
-                this.isSubmitted = false;
-                this.showModal = true;
+                this.parsedResults = data;
+                this.selectedResults = data.map((_, i) => i);
+                this.aiStep = 'review';
             } catch (error) {
                 console.error('Error parsing text:', error);
                 alert('Terjadi kesalahan saat mengekstrak data.');
             } finally {
                 this.isAnalyzing = false;
+            }
+        },
+        toggleResult(index) {
+            if (this.selectedResults.includes(index)) {
+                this.selectedResults = this.selectedResults.filter(i => i !== index);
+            } else {
+                this.selectedResults.push(index);
+            }
+        },
+        openSingleResult(index) {
+            const d = this.parsedResults[index];
+            this.form.tanggal = d.tanggal || '';
+            this.form.nama_kegiatan = d.nama_kegiatan || '';
+            this.form.lokasi = d.lokasi || '';
+            this.form.prioritas = d.prioritas || 'Sedang';
+            this.form.status = d.status || 'Selesai';
+            this.form.hasil_deskripsi = d.hasil_deskripsi || '';
+            this.form.keterangan_tindak_lanjut = d.keterangan_tindak_lanjut || '';
+            this.pics = d.pic ? d.pic.split(/(?:dan|\&|,)/i).map(p => p.trim()).filter(p => p) : [];
+            this.showAiModal = false;
+            this.editId = null;
+            this.isSubmitted = false;
+            this.cameFromAiModal = true;
+            this.aiEditingIndex = index;
+            this.showModal = true;
+        },
+        async saveBulk() {
+            const items = this.selectedResults.map(i => this.parsedResults[i]);
+            if (items.length === 0) return;
+            this.isSaving = true;
+            try {
+                const response = await fetch('{{ route('laporan-mingguan.bulk-store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ items })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.showAiModal = false;
+                    window.location.reload();
+                }
+            } catch (error) {
+                alert('Terjadi kesalahan saat menyimpan data.');
+            } finally {
+                this.isSaving = false;
             }
         },
         pics: [],  
@@ -79,6 +125,7 @@
         },
         openCreateModal() {
             this.editId = null;
+            this.cameFromAiModal = false;
             this.pics = [];
             this.form.tanggal = '';
             this.form.nama_kegiatan = '';
@@ -92,6 +139,7 @@
         },
         openEditModal(data) {
             this.editId = data.hashid;
+            this.cameFromAiModal = false;
             this.form.tanggal = data.tanggal;
             this.form.nama_kegiatan = data.nama_kegiatan;
             this.form.lokasi = data.lokasi;
@@ -167,11 +215,66 @@
         },
         submitForm(e) {
             this.isSubmitted = true;
-            // Validate required fields
             if (!this.form.tanggal || !this.form.nama_kegiatan || !this.form.lokasi || this.pics.length === 0) {
-                return; // Stop submission if invalid
+                return;
             }
-            e.target.submit(); // Submit via HTML form natively
+            // Kalau dibuka dari AI modal (bukan edit record lama), simpan via AJAX
+            if (this.cameFromAiModal && !this.editId) {
+                e.preventDefault();
+                this.saveFromAiModal();
+                return;
+            }
+            e.target.submit();
+        },
+        async saveFromAiModal() {
+            this.isSaving = true;
+            try {
+                const item = {
+                    tanggal:                  this.form.tanggal,
+                    nama_kegiatan:            this.form.nama_kegiatan,
+                    lokasi:                   this.form.lokasi,
+                    prioritas:                this.form.prioritas,
+                    status:                   this.form.status,
+                    hasil_deskripsi:          this.form.hasil_deskripsi,
+                    keterangan_tindak_lanjut: this.form.keterangan_tindak_lanjut,
+                    pic:                      this.pics.join(', ')
+                };
+                const response = await fetch('{{ route('laporan-mingguan.bulk-store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ items: [item] })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    // Hapus kartu yang sudah disimpan dari daftar review
+                    const idx = this.aiEditingIndex;
+                    if (idx !== null) {
+                        this.parsedResults.splice(idx, 1);
+                        this.selectedResults = this.selectedResults
+                            .filter(i => i !== idx)
+                            .map(i => i > idx ? i - 1 : i);
+                        this.aiEditingIndex = null;
+                    }
+                    this.showModal = false;
+                    this.cameFromAiModal = false;
+                    if (this.parsedResults.length > 0) {
+                        // Masih ada kartu yang belum disimpan → kembali ke review
+                        this.showAiModal = true;
+                        this.aiStep = 'review';
+                    } else {
+                        // Semua sudah disimpan → reload untuk tampilkan data baru di tabel
+                        window.location.reload();
+                    }
+                }
+            } catch (error) {
+                alert('Terjadi kesalahan saat menyimpan data.');
+            } finally {
+                this.isSaving = false;
+            }
         },
         openDeleteModal(id) {
             this.deleteId = id;
@@ -582,16 +685,30 @@
                 </div>
 
                 <div class="px-8 py-5 border-t border-gray-100 flex items-center justify-between bg-white z-10">
-                    <button type="button" @click="showModal = false"
-                        class="text-xs font-bold text-gray-400 hover:text-gray-800 transition-colors uppercase tracking-wider">
-                        BATAL
-                    </button>
+                    <!-- Kiri: tombol Batal atau Kembali ke Hasil Ekstrak -->
+                    <div class="flex items-center gap-3">
+                        <button type="button" @click="showModal = false; if (cameFromAiModal) { showAiModal = true; aiStep = 'review'; }"
+                            class="text-xs font-bold text-gray-400 hover:text-gray-800 transition-colors uppercase tracking-wider">
+                            BATAL
+                        </button>
+                        <template x-if="cameFromAiModal && !editId">
+                            <button type="button"
+                                @click="showModal = false; showAiModal = true; aiStep = 'review';"
+                                class="flex items-center gap-1.5 text-xs font-bold text-purple-500 hover:text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg transition-colors">
+                                <i class="fas fa-arrow-left text-[0.6rem]"></i>
+                                Kembali ke Hasil Ekstrak
+                            </button>
+                        </template>
+                    </div>
+                    <!-- Kanan: tombol Simpan -->
                     <button type="submit" form="form-laporan"
-                        class="inline-flex items-center gap-3 bg-[#0d6efd] hover:bg-blue-700 text-white pl-2 pr-6 py-2 rounded-full font-medium shadow-[0_8px_20px_rgb(13,110,253,0.3)] transition-all hover:-translate-y-0.5 text-sm">
+                        :disabled="isSaving"
+                        class="inline-flex items-center gap-3 bg-[#0d6efd] hover:bg-blue-700 text-white pl-2 pr-6 py-2 rounded-full font-medium shadow-[0_8px_20px_rgb(13,110,253,0.3)] transition-all hover:-translate-y-0.5 text-sm disabled:opacity-60 disabled:cursor-not-allowed">
                         <div class="w-7 h-7 bg-white rounded-full flex items-center justify-center text-[#0d6efd]">
-                            <i class="fas" :class="editId ? 'fa-save' : 'fa-arrow-right'" class="text-[0.7rem]"></i>
+                            <i class="fas text-[0.7rem]"
+                               :class="isSaving ? 'fa-spinner fa-spin' : (editId ? 'fa-save' : 'fa-arrow-right')"></i>
                         </div>
-                        <span x-text="editId ? 'Perbarui Data' : 'Simpan Data'"></span>
+                        <span x-text="isSaving ? 'Menyimpan...' : (editId ? 'Perbarui Data' : (cameFromAiModal ? 'Simpan & Lanjut' : 'Simpan Data'))"></span>
                     </button>
                 </div>
             </div>
@@ -726,7 +843,7 @@
             </div>
         </div>
 
-        <!-- Modal Ekstrak Teks AI -->
+        <!-- Modal Ekstrak Teks AI (2 langkah: input → review) -->
         <div x-show="showAiModal" style="display: none;"
             class="fixed inset-0 z-[150] flex items-center justify-center p-4">
             <div x-show="showAiModal" x-transition.opacity class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
@@ -738,13 +855,16 @@
                 x-transition:leave="transition ease-in duration-200 transform"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-2xl mx-auto overflow-hidden z-10 relative">
+                class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-2xl mx-auto overflow-hidden z-10 relative flex flex-col max-h-[90vh]">
 
-                <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white">
+                <!-- Header -->
+                <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
                     <div>
-                        <p class="text-[0.65rem] font-bold text-gray-400 tracking-[0.2em] uppercase mb-1">PENGISIAN CEPAT</p>
+                        <p class="text-[0.65rem] font-bold text-gray-400 tracking-[0.2em] uppercase mb-1"
+                            x-text="aiStep === 'input' ? 'PENGISIAN CEPAT' : 'HASIL EKSTRAKSI'"></p>
                         <h3 class="text-xl font-bold text-[#111827] flex items-center gap-2">
-                            <i class="fas fa-magic text-purple-500"></i> Ekstrak Data dari Teks
+                            <i class="fas fa-magic text-purple-500"></i>
+                            <span x-text="aiStep === 'input' ? 'Ekstrak Data dari Teks' : parsedResults.length + ' Kegiatan Terdeteksi'"></span>
                         </h3>
                     </div>
                     <button @click="showAiModal = false" class="text-gray-400 hover:text-red-500 transition">
@@ -752,27 +872,93 @@
                     </button>
                 </div>
 
-                <div class="p-8">
+                <!-- STEP 1: Input Teks -->
+                <div x-show="aiStep === 'input'" class="p-8">
                     <p class="text-xs text-gray-500 mb-4 bg-purple-50 p-3 rounded-lg border border-purple-100">
-                        <i class="fas fa-info-circle text-purple-400 mr-1"></i> Paste laporan mentah dari WhatsApp atau catatan Anda di bawah ini. Sistem akan otomatis mengisi form berdasarkan pola yang terdeteksi. Anda tetap bisa mengubah datanya sebelum disimpan.
+                        <i class="fas fa-info-circle text-purple-400 mr-1"></i>
+                        Paste laporan dari WhatsApp atau catatan. Sistem otomatis mendeteksi <strong>satu atau lebih kegiatan</strong> sekaligus — pisahkan dengan nomor (1. 2.), poin (- atau •), atau baris kosong.
                     </p>
-
-                    <textarea x-model="rawText" rows="6" placeholder="Contoh: Kegiatan maintenance server bulan Mei dilaksanakan pada 12-05-2026 di ruang server lantai 2 oleh Budi dan Andi. Status selesai dengan prioritas tinggi. Hasil: membersihkan debu dan cek suhu."
+                    <textarea x-model="rawText" rows="8"
+                        placeholder="Contoh multi-kegiatan:&#10;1. Maintenance server 12-05-2026 di Ruang Server oleh Budi. Status selesai.&#10;&#10;2. Instalasi printer 13-05-2026 di Ruang Rapat oleh Andi. Status berjalan."
                         class="w-full bg-[#f4f5f7] border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-purple-500 transition-all text-gray-700 resize-none"></textarea>
                 </div>
 
-                <div class="px-8 py-5 border-t border-gray-100 flex justify-end bg-white">
-                    <div class="flex gap-3">
-                        <button type="button" @click="showAiModal = false"
-                            class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors text-sm">
-                            Batal
-                        </button>
-                        <button type="button" @click="parseRawText()" :disabled="isAnalyzing || !rawText.trim()"
-                            class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-lg shadow-purple-200 transition-colors flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span x-show="!isAnalyzing"><i class="fas fa-sync-alt"></i> Ekstrak Sekarang</span>
-                            <span x-show="isAnalyzing"><i class="fas fa-spinner fa-spin"></i> Mendeteksi Pola...</span>
-                        </button>
-                    </div>
+                <!-- STEP 2: Review Hasil -->
+                <div x-show="aiStep === 'review'" class="overflow-y-auto p-6 space-y-3">
+                    <p class="text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded-lg p-3 mb-1">
+                        <i class="fas fa-check-circle text-blue-400 mr-1"></i>
+                        Centang kegiatan yang ingin disimpan. Klik <strong>Edit</strong> untuk mengubah detail sebelum menyimpan satu per satu.
+                    </p>
+                    <template x-for="(item, index) in parsedResults" :key="index">
+                        <div class="rounded-xl border-2 transition-all cursor-pointer"
+                            :class="selectedResults.includes(index) ? 'border-purple-400 bg-purple-50' : 'border-gray-100 bg-gray-50 opacity-60'"
+                            @click="toggleResult(index)">
+                            <div class="p-4 flex items-start gap-3">
+                                <!-- Checkbox visual -->
+                                <div class="mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors"
+                                    :class="selectedResults.includes(index) ? 'bg-purple-500 border-purple-500 text-white' : 'border-gray-300'">
+                                    <i class="fas fa-check text-[0.6rem]" x-show="selectedResults.includes(index)"></i>
+                                </div>
+                                <!-- Info kegiatan -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-bold text-gray-800 truncate" x-text="item.nama_kegiatan || '(Nama tidak terdeteksi)'"></p>
+                                    <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1.5">
+                                        <span class="text-xs text-gray-500"><i class="far fa-calendar-alt mr-1 text-gray-400"></i><span x-text="item.tanggal"></span></span>
+                                        <span class="text-xs text-gray-500"><i class="fas fa-map-marker-alt mr-1 text-gray-400"></i><span x-text="item.lokasi || '-'"></span></span>
+                                        <span class="text-xs text-gray-500"><i class="fas fa-user mr-1 text-gray-400"></i><span x-text="item.pic || '-'"></span></span>
+                                    </div>
+                                    <div class="flex gap-2 mt-2">
+                                        <span class="text-[0.65rem] font-bold px-2 py-0.5 rounded-full"
+                                            :class="{'bg-green-100 text-green-700': item.status==='Selesai', 'bg-blue-100 text-blue-700': item.status==='Berjalan', 'bg-orange-100 text-orange-700': item.status==='Tertunda'}"
+                                            x-text="item.status"></span>
+                                        <span class="text-[0.65rem] font-bold px-2 py-0.5 rounded-full"
+                                            :class="{'bg-red-100 text-red-700': item.prioritas==='Tinggi', 'bg-orange-100 text-orange-700': item.prioritas==='Sedang', 'bg-green-100 text-green-700': item.prioritas==='Rendah'}"
+                                            x-text="item.prioritas"></span>
+                                    </div>
+                                </div>
+                                <!-- Tombol Edit -->
+                                <button type="button" @click.stop="openSingleResult(index)"
+                                    class="shrink-0 text-xs font-bold text-purple-600 bg-purple-100 hover:bg-purple-200 px-3 py-1.5 rounded-lg transition-colors">
+                                    <i class="fas fa-edit mr-1"></i>Edit
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-8 py-5 border-t border-gray-100 flex items-center justify-between bg-white shrink-0">
+                    <!-- Step 1 footer -->
+                    <template x-if="aiStep === 'input'">
+                        <div class="flex w-full justify-end gap-3">
+                            <button type="button" @click="showAiModal = false"
+                                class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors text-sm">
+                                Batal
+                            </button>
+                            <button type="button" @click="parseRawText()" :disabled="isAnalyzing || !rawText.trim()"
+                                class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-lg shadow-purple-200 transition-colors flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span x-show="!isAnalyzing"><i class="fas fa-search"></i> Deteksi Kegiatan</span>
+                                <span x-show="isAnalyzing"><i class="fas fa-spinner fa-spin"></i> Mendeteksi...</span>
+                            </button>
+                        </div>
+                    </template>
+                    <!-- Step 2 footer -->
+                    <template x-if="aiStep === 'review'">
+                        <div class="flex w-full items-center justify-between gap-3">
+                            <button type="button" @click="aiStep = 'input'"
+                                class="text-xs font-bold text-gray-400 hover:text-gray-700 transition flex items-center gap-1">
+                                <i class="fas fa-arrow-left"></i> Kembali
+                            </button>
+                            <div class="flex gap-3">
+                                <span class="text-xs text-gray-500 self-center" x-text="selectedResults.length + ' dari ' + parsedResults.length + ' dipilih'"></span>
+                                <button type="button" @click="saveBulk()" :disabled="isSaving || selectedResults.length === 0"
+                                    class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-lg shadow-purple-200 transition-colors flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <span x-show="!isSaving"><i class="fas fa-save"></i> Simpan yang Dipilih</span>
+                                    <span x-show="isSaving"><i class="fas fa-spinner fa-spin"></i> Menyimpan...</span>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>

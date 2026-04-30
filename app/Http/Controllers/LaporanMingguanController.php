@@ -93,7 +93,31 @@ class LaporanMingguanController extends Controller
 
     public function parseText(Request $request)
     {
-        $result = $this->laporanService->parseText($request->input('text', ''));
-        return response()->json($result);
+        $results = $this->laporanService->parseMultipleTexts($request->input('text', ''));
+        return response()->json($results);
+    }
+
+    public function bulkStore(Request $request)
+    {
+        $items = $request->input('items', []);
+        $count = 0;
+
+        foreach ($items as $item) {
+            if (empty($item['tanggal']) || empty($item['nama_kegiatan'])) continue;
+
+            LaporanMingguan::create([
+                'tanggal'                   => $item['tanggal'],
+                'nama_kegiatan'             => ucfirst($item['nama_kegiatan']),
+                'lokasi'                    => $item['lokasi'] ?? '-',
+                'prioritas'                 => $item['prioritas'] ?? 'Sedang',
+                'status'                    => $item['status'] ?? 'Selesai',
+                'hasil_deskripsi'           => $item['hasil_deskripsi'] ?? '',
+                'keterangan_tindak_lanjut'  => $item['keterangan_tindak_lanjut'] ?? '',
+                'pic'                       => $item['pic'] ?? '',
+            ]);
+            $count++;
+        }
+
+        return response()->json(['success' => true, 'count' => $count]);
     }
 }

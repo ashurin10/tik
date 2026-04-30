@@ -3,13 +3,19 @@
 namespace App\Http\Controllers\Asset;
 
 use App\Http\Controllers\Controller;
+use App\Models\AsetTik;
+use App\Models\TransaksiMasuk;
+use App\Models\TransaksiPeminjaman;
+use App\Services\Asset\MasterAsetService;
+use App\Services\UniqueCodeService;
+use App\Http\Requests\Asset\StoreMasterAsetRequest;
 use Illuminate\Http\Request;
 
 class MutasiController extends Controller
 {
     public function penerimaan()
     {
-        $riwayatPenerimaan = \App\Models\TransaksiMasuk::latest()->get();
+        $riwayatPenerimaan = TransaksiMasuk::latest()->get();
         return view('aset.mutasi.penerimaan.index', compact('riwayatPenerimaan'));
     }
 
@@ -18,7 +24,7 @@ class MutasiController extends Controller
         return view('aset.mutasi.penerimaan.create');
     }
 
-    public function storePenerimaanAset(\App\Http\Requests\Asset\StoreMasterAsetRequest $request, \App\Services\Asset\MasterAsetService $masterAsetService)
+    public function storePenerimaanAset(StoreMasterAsetRequest $request, MasterAsetService $masterAsetService)
     {
         try {
             // Validasi tambahan untuk penerimaan
@@ -32,8 +38,8 @@ class MutasiController extends Controller
             $asset = $masterAsetService->createAsset($request->validated());
 
             // 2. Create the Penerimaan (TransaksiMasuk) logging
-            $noTransaksi = 'TM-' . date('Ymd') . '-' . rand(100, 999);
-            \App\Models\TransaksiMasuk::create([
+            $noTransaksi = UniqueCodeService::generate('TM', 'transaksi_masuk');
+            TransaksiMasuk::create([
                 'no_transaksi' => $noTransaksi,
                 'tanggal_masuk' => $request->tanggal_masuk,
                 'sumber_aset' => $request->sumber_aset,
@@ -47,7 +53,7 @@ class MutasiController extends Controller
         }
     }
 
-    public function importPenerimaan(Request $request, \App\Services\Asset\MasterAsetService $masterAsetService)
+    public function importPenerimaan(Request $request, MasterAsetService $masterAsetService)
     {
         $request->validate([
             'sumber_aset' => 'required|string',
@@ -61,8 +67,8 @@ class MutasiController extends Controller
             $importedCount = $masterAsetService->importCsv($request->file('file_import'));
 
             // Create 1 aggregate record in Transaksi Masuk
-            $noTransaksi = 'TM-' . date('Ymd') . '-' . rand(100, 999);
-            \App\Models\TransaksiMasuk::create([
+            $noTransaksi = UniqueCodeService::generate('TM', 'transaksi_masuk');
+            TransaksiMasuk::create([
                 'no_transaksi' => $noTransaksi,
                 'tanggal_masuk' => $request->tanggal_masuk,
                 'sumber_aset' => $request->sumber_aset,
@@ -83,8 +89,8 @@ class MutasiController extends Controller
 
     public function checkout()
     {
-        $assets = \App\Models\AsetTik::where('status', 'Aktif')->get();
-        $riwayatCheckout = \App\Models\TransaksiPeminjaman::where('status', 'Dipinjam')->latest()->get();
+        $assets = AsetTik::where('status', 'Aktif')->get();
+        $riwayatCheckout = TransaksiPeminjaman::where('status', 'Dipinjam')->latest()->get();
         return view('aset.mutasi.checkout.index', compact('assets', 'riwayatCheckout'));
     }
 
@@ -96,27 +102,27 @@ class MutasiController extends Controller
             'tanggal_pinjam' => 'required|date',
         ]);
 
-        $aset = \App\Models\AsetTik::findOrFail($request->aset_id);
+        $aset = AsetTik::findOrFail($request->aset_id);
         if ($aset->status !== 'Aktif') {
             return back()->with('error', 'Aset tidak tersedia untuk didistribusikan.');
         }
 
-        $noPinjam = 'OUT-' . date('Ymd') . '-' . rand(100, 999);
+        $noPinjam = UniqueCodeService::generate('OUT', 'transaksi_peminjaman', 'no_peminjaman');
 
-        \App\Models\TransaksiPeminjaman::create([
+        TransaksiPeminjaman::create([
             'no_peminjaman' => $noPinjam,
             'aset_id' => $request->aset_id,
             'nama_peminjam' => $request->nama_peminjam,
             'tanggal_pinjam' => $request->tanggal_pinjam,
-            'rencana_kembali' => null, // Ditiadakan, aset keluar secara permanen/tidak mengikat waktu pengembalian
-            'status' => 'Dipinjam', // Tetap menggunakan logic checkin di sistem jika sewaktu-waktu dicabut
+            'rencana_kembali' => null,
+            'status' => 'Dipinjam',
         ]);
 
         // Update status master aset menjadi Terpakai, dan otomatis mengubah Unit Pengguna/Lokasinya sesuai tujuan
         $aset->update([
             'status' => 'Terpakai',
-            'unit_pengguna' => $request->nama_peminjam, // OPD Tujuan
-            'lokasi' => $request->nama_peminjam         // Otomatis sinkronisasi lokasi baru
+            'unit_pengguna' => $request->nama_peminjam,
+            'lokasi' => $request->nama_peminjam
         ]);
 
         return redirect()->route('aset.mutasi.checkout.index')->with('success', 'Berhasil! Aset Keluar telah didistribusikan dan Daftar Master Aset telah terupdate otomatis.');
@@ -125,8 +131,8 @@ class MutasiController extends Controller
     public function checkin()
     {
         // Get all currently borrowed active records
-        $peminjaman = \App\Models\TransaksiPeminjaman::with('aset')->where('status', 'Dipinjam')->get();
-        $riwayatCheckin = \App\Models\TransaksiPeminjaman::with('aset')->where('status', 'Dikembalikan')->latest()->limit(50)->get();
+        $peminjaman = TransaksiPeminjaman::with('aset')->where('status', 'Dipinjam')->get();
+        $riwayatCheckin = TransaksiPeminjaman::with('aset')->where('status', 'Dikembalikan')->latest()->limit(50)->get();
         return view('aset.mutasi.checkin.index', compact('peminjaman', 'riwayatCheckin'));
     }
 
@@ -138,15 +144,15 @@ class MutasiController extends Controller
             'kondisi_saat_kembali' => 'required|string',
         ]);
 
-        $transaksi = \App\Models\TransaksiPeminjaman::findOrFail($request->peminjaman_id);
-        
+        $transaksi = TransaksiPeminjaman::findOrFail($request->peminjaman_id);
+
         $transaksi->update([
             'tanggal_kembali' => $request->tanggal_kembali,
             'kondisi_saat_kembali' => $request->kondisi_saat_kembali,
             'status' => 'Dikembalikan',
         ]);
 
-        $aset = \App\Models\AsetTik::find($transaksi->aset_id);
+        $aset = AsetTik::find($transaksi->aset_id);
         if ($aset) {
             // Ketika aset ditarik dari OPD, status kembali Aktif di gudang, dan lokasi di-reset.
             $aset->update([

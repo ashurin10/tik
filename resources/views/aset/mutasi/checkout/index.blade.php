@@ -130,6 +130,7 @@
         .ts-control {
             border: 0 !important;
             padding: 0.75rem 1rem !important; /* py-3 px-4 */
+            padding-right: 2.5rem !important; /* Beri ruang untuk panah (caret) bawaan tom-select */
             border-radius: 0.75rem !important; /* rounded-xl */
             background-color: #f9fafb !important; /* bg-gray-50 */
             box-shadow: none !important;
@@ -137,6 +138,10 @@
         }
         .ts-control.focus {
             box-shadow: 0 0 0 2px #f97316 !important; /* focus:ring-orange-500 */
+        }
+        /* Tambahkan style untuk memperbaiki posisi panah */
+        .ts-wrapper.single .ts-control::after {
+            right: 1rem !important;
         }
     </style>
     @endpush

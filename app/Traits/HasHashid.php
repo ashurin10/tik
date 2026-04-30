@@ -2,20 +2,26 @@
 
 namespace App\Traits;
 
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Contracts\Encryption\DecryptException;
+use Vinkla\Hashids\Facades\Hashids;
 
+/**
+ * Trait untuk meng-encode ID model menggunakan Hashids (deterministik).
+ *
+ * Perbedaan dengan implementasi sebelumnya:
+ * - Menggunakan Hashids alih-alih Crypt::encryptString (hasil tetap sama untuk ID yang sama)
+ * - URL stabil, bisa di-bookmark dan di-share
+ * - Lebih ringan secara komputasi
+ */
 trait HasHashid
 {
     /**
-     * Get the encoded AES Base64 string.
-     * We keep the term 'hashid' for compatibility with frontend/AlpineJS bindings.
+     * Get the encoded Hashid string.
      *
      * @return string
      */
-    public function getHashidAttribute()
+    public function getHashidAttribute(): string
     {
-        return Crypt::encryptString((string) $this->getKey());
+        return Hashids::connection('main')->encode($this->getKey());
     }
 
     /**
@@ -23,7 +29,7 @@ trait HasHashid
      *
      * @return string
      */
-    public function getRouteKeyName()
+    public function getRouteKeyName(): string
     {
         return 'hashid';
     }
@@ -38,13 +44,13 @@ trait HasHashid
     public function resolveRouteBinding($value, $field = null)
     {
         if (empty($field) || $field === $this->getRouteKeyName()) {
-            try {
-                $decoded = Crypt::decryptString($value);
-            } catch (DecryptException $e) {
+            $decoded = Hashids::connection('main')->decode($value);
+
+            if (empty($decoded)) {
                 return null;
             }
 
-            return $this->where($this->getKeyName(), $decoded)->first();
+            return $this->where($this->getKeyName(), $decoded[0])->first();
         }
 
         return parent::resolveRouteBinding($value, $field);

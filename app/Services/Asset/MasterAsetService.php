@@ -3,6 +3,7 @@
 namespace App\Services\Asset;
 
 use App\Models\AsetTik;
+use App\Services\UniqueCodeService;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
@@ -59,21 +60,33 @@ class MasterAsetService
         DB::beginTransaction();
         try {
             $path = $file->getRealPath();
-            $data = array_map('str_getcsv', file($path));
-            array_shift($data);
+            $handle = fopen($path, 'r');
+
+            if (!$handle) {
+                throw new Exception('Tidak dapat membaca file CSV.');
+            }
+
+            $header = fgetcsv($handle);
+            $expectedHeader = [
+                'nama_aset', 'tahun_pengadaan(YYYY)', 'kategori(Hardware/Software/Jaringan)', 'jenis', 'merk',
+                'model_tipe', 'nomor_seri', 'kondisi(Baik/Cukup/Rusak)',
+                'status(Aktif/Terpakai/Maintenance/Pensiun)', 'unit_pengguna',
+                'penanggung_jawab', 'pemilik_aset', 'lokasi', 'catatan'
+            ];
+
+            if ($header !== $expectedHeader) {
+                fclose($handle);
+                throw new Exception('Format header CSV tidak sesuai template. Silakan unduh template terbaru.');
+            }
 
             $importedCount = 0;
-            $year = date('Y');
 
-            // Find the true absolute last sequence for this year pattern
-            $lastAsset = AsetTik::where('kode_aset', 'like', "INV-{$year}-%")->orderBy('id', 'desc')->first();
-            $sequence = $lastAsset ? intval(substr($lastAsset->kode_aset, -3)) : 0;
+            while (($row = fgetcsv($handle)) !== false) {
+                if (count($row) < 14 || empty(trim($row[0]))) {
+                    continue;
+                }
 
-            foreach ($data as $row) {
-                if (count($row) < 14 || empty(trim($row[0]))) continue;
-
-                $sequence++;
-                $kodeAset = 'INV-' . $year . '-' . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+                $kodeAset = UniqueCodeService::generateAssetCode();
 
                 AsetTik::create([
                     'kode_aset' => $kodeAset,
@@ -94,7 +107,10 @@ class MasterAsetService
                 ]);
                 $importedCount++;
             }
+
+            fclose($handle);
             DB::commit();
+
             return $importedCount;
         } catch (Exception $e) {
             DB::rollBack();
@@ -107,10 +123,7 @@ class MasterAsetService
         DB::beginTransaction();
         try {
             if (empty($data['kode_aset'])) {
-                $year = date('Y');
-                $lastAsset = AsetTik::whereYear('created_at', $year)->latest('id')->first();
-                $sequence = $lastAsset ? intval(substr($lastAsset->kode_aset, -3)) + 1 : 1;
-                $data['kode_aset'] = 'INV-' . $year . '-' . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+                $data['kode_aset'] = UniqueCodeService::generateAssetCode();
             }
 
             if (isset($data['spesifikasi']) && is_array($data['spesifikasi'])) {
@@ -120,7 +133,7 @@ class MasterAsetService
 
             $asset = AsetTik::create($data);
             DB::commit();
-            
+
             return $asset;
         } catch (Exception $e) {
             DB::rollBack();

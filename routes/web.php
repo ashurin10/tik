@@ -36,6 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/pics/search', [LaporanMingguanController::class, 'searchPics'])->name('pics.search');
         Route::get('/kegiatan/search', [LaporanMingguanController::class, 'searchKegiatan'])->name('kegiatan.search');
         Route::post('/parse-text', [LaporanMingguanController::class, 'parseText'])->name('parse-text');
+        Route::post('/bulk-store', [LaporanMingguanController::class, 'bulkStore'])->name('bulk-store');
         
         Route::get('/', [LaporanMingguanController::class, 'index'])->name('index');
         Route::post('/', [LaporanMingguanController::class, 'store'])->name('store');
