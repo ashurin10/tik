@@ -120,4 +120,25 @@ class LaporanMingguanController extends Controller
 
         return response()->json(['success' => true, 'count' => $count]);
     }
+
+    public function resetAll(Request $request)
+    {
+        // Hanya admin yang boleh melakukan reset
+        if (!auth()->user()->isAdmin()) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Akses ditolak. Hanya admin yang dapat mereset data.'], 403);
+            }
+            return redirect()->route('laporan-mingguan.index')
+                ->with('error', 'Akses ditolak. Hanya admin yang dapat mereset data.');
+        }
+
+        LaporanMingguan::truncate();
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Semua data laporan mingguan berhasil direset.']);
+        }
+
+        return redirect()->route('laporan-mingguan.index')
+            ->with('success', 'Semua data laporan mingguan berhasil direset.');
+    }
 }

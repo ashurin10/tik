@@ -37,7 +37,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/kegiatan/search', [LaporanMingguanController::class, 'searchKegiatan'])->name('kegiatan.search');
         Route::post('/parse-text', [LaporanMingguanController::class, 'parseText'])->name('parse-text');
         Route::post('/bulk-store', [LaporanMingguanController::class, 'bulkStore'])->name('bulk-store');
-        
+
+        // Admin-only: reset semua data laporan mingguan
+        Route::delete('/reset-all', [LaporanMingguanController::class, 'resetAll'])->name('reset-all');
+
         Route::get('/', [LaporanMingguanController::class, 'index'])->name('index');
         Route::post('/', [LaporanMingguanController::class, 'store'])->name('store');
         Route::put('/{laporanMingguan}', [LaporanMingguanController::class, 'update'])->name('update');

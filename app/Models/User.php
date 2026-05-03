@@ -60,4 +60,12 @@ class User extends Authenticatable
             'terkunci_sampai' => 'datetime',
         ];
     }
+
+    /**
+     * Cek apakah user adalah admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->peran === 'admin';
+    }
 }

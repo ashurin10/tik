@@ -5,12 +5,20 @@
         deleteId: null,
         showDeleteModal: false,
         showExportModal: false,
+        showResetModal: false,
         filterBulan: '',
         filterSearch: '',
+        filterTanggal: '',
         matchesFilter(tanggal, searchTarget) {
-            const bulanOk = !this.filterBulan || tanggal.startsWith(this.filterBulan);
-            const searchOk = !this.filterSearch.trim() || searchTarget.toLowerCase().includes(this.filterSearch.toLowerCase());
-            return bulanOk && searchOk;
+            const bulanOk   = !this.filterBulan   || tanggal.startsWith(this.filterBulan);
+            const tanggalOk = !this.filterTanggal || tanggal === this.filterTanggal;
+            const searchOk  = !this.filterSearch.trim() || searchTarget.toLowerCase().includes(this.filterSearch.toLowerCase());
+            return bulanOk && tanggalOk && searchOk;
+        },
+        resetFilter() {
+            this.filterBulan   = '';
+            this.filterTanggal = '';
+            this.filterSearch  = '';
         },
         exportForm: {
             start_date: '',
@@ -324,6 +332,12 @@
                 <i class="fas fa-check-circle"></i> {{ session('success') }}
             </div>
         @endif
+        @if(session('error'))
+            <div
+                class="mb-4 bg-red-50 text-red-700 p-4 rounded-xl border-l-4 border-red-500 font-bold flex items-center gap-3">
+                <i class="fas fa-times-circle"></i> {{ session('error') }}
+            </div>
+        @endif
 
         <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <div>
@@ -340,6 +354,12 @@
                     class="bg-white text-gray-700 px-5 py-2.5 rounded-xl font-bold border border-gray-200 shadow-sm hover:bg-gray-50 transition flex items-center gap-2">
                     <i class="fas fa-print text-blue-600"></i> Cetak Laporan
                 </button>
+                @if(auth()->user()->isAdmin())
+                <button type="button" @click="showResetModal = true"
+                    class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl font-bold border border-red-200 hover:bg-red-100 transition flex items-center gap-2">
+                    <i class="fas fa-trash-alt"></i> Reset Data
+                </button>
+                @endif
                 <button @click="openCreateModal()"
                     class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition flex items-center gap-2">
                     <i class="fas fa-plus"></i> Tambah Data
@@ -348,22 +368,50 @@
         </div>
 
         <!-- Live Filter Bar -->
-        <div class="bg-white rounded-2xl shadow-md shadow-gray-200/40 border border-gray-100 px-5 py-4 mb-5 flex flex-col sm:flex-row items-center gap-3">
-            <div class="flex items-center gap-2 flex-1 w-full">
-                <label class="text-[0.7rem] font-bold text-gray-500 whitespace-nowrap"><i class="fas fa-calendar-alt mr-1 text-blue-400"></i>Bulan</label>
-                <input type="month" x-model="filterBulan"
-                    class="bg-[#f4f5f7] border-0 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 transition-all text-gray-700">
+        <div class="bg-white rounded-2xl shadow-md shadow-gray-200/40 border border-gray-100 px-5 py-4 mb-5">
+            <div class="flex flex-wrap items-end gap-3">
+
+                {{-- Filter Bulan --}}
+                <div class="flex flex-col gap-1 min-w-[130px]">
+                    <label class="text-[0.7rem] font-bold text-gray-500">
+                        <i class="fas fa-calendar-alt mr-1 text-blue-400"></i>Bulan
+                    </label>
+                    <input type="month" x-model="filterBulan"
+                        @change="filterTanggal = ''"
+                        class="bg-[#f4f5f7] border-0 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 transition-all text-gray-700">
+                </div>
+
+                {{-- Filter Tanggal Spesifik --}}
+                <div class="flex flex-col gap-1 min-w-[150px]">
+                    <label class="text-[0.7rem] font-bold text-gray-500">
+                        <i class="fas fa-calendar-day mr-1 text-green-400"></i>Tanggal
+                    </label>
+                    <input type="date" x-model="filterTanggal"
+                        @change="filterBulan = ''"
+                        class="bg-[#f4f5f7] border-0 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 transition-all text-gray-700">
+                </div>
+
+                {{-- Filter Pencarian --}}
+                <div class="flex flex-col gap-1 flex-1 min-w-[180px]">
+                    <label class="text-[0.7rem] font-bold text-gray-500">
+                        <i class="fas fa-search mr-1 text-blue-400"></i>Cari
+                    </label>
+                    <input type="text" x-model="filterSearch"
+                        placeholder="Nama kegiatan, lokasi, atau PIC…"
+                        class="w-full bg-[#f4f5f7] border-0 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 transition-all text-gray-700">
+                </div>
+
+                {{-- Tombol Reset Filter --}}
+                <div class="flex flex-col gap-1 justify-end">
+                    <label class="text-[0.7rem] font-bold text-transparent">-</label>
+                    <button type="button"
+                        x-show="filterBulan || filterTanggal || filterSearch"
+                        @click="resetFilter()"
+                        class="shrink-0 bg-gray-100 text-gray-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-200 transition flex items-center gap-2">
+                        <i class="fas fa-times text-xs"></i> Reset Filter
+                    </button>
+                </div>
             </div>
-            <div class="flex items-center gap-2 flex-1 w-full">
-                <label class="text-[0.7rem] font-bold text-gray-500 whitespace-nowrap"><i class="fas fa-search mr-1 text-blue-400"></i>Cari</label>
-                <input type="text" x-model="filterSearch"
-                    placeholder="Nama kegiatan, lokasi, atau PIC…"
-                    class="w-full bg-[#f4f5f7] border-0 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 transition-all text-gray-700">
-            </div>
-            <button type="button" x-show="filterBulan || filterSearch" @click="filterBulan = ''; filterSearch = ''"
-                class="shrink-0 bg-gray-100 text-gray-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-200 transition flex items-center gap-2">
-                <i class="fas fa-times text-xs"></i> Reset
-            </button>
         </div>
 
         <!-- Table -->
@@ -476,9 +524,10 @@
 
         <!-- Add Data Modal -->
         <div x-show="showModal" style="display: none;"
+            @click="showModal = false"
             class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
             x-transition>
-            <div @click.away="showModal = false"
+            <div @click.stop
                 class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 <div
                     class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-sm z-10">
@@ -963,5 +1012,45 @@
             </div>
         </div>
 
+        {{-- Modal Konfirmasi Reset (Admin Only) --}}
+        @if(auth()->user()->isAdmin())
+        <div x-show="showResetModal" x-cloak
+            @click="showResetModal = false"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style="background: rgba(0,0,0,0.5);">
+            <div @click.stop
+                class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Reset Semua Data</h3>
+                        <p class="text-sm text-gray-500">Tindakan ini tidak dapat dibatalkan.</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm mb-6">
+                    Semua data laporan mingguan akan <strong class="text-red-600">dihapus permanen</strong>.
+                    Apakah Anda yakin ingin melanjutkan?
+                </p>
+                <div class="flex justify-end gap-3">
+                    <button type="button" @click="showResetModal = false"
+                        class="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition text-sm">
+                        Batal
+                    </button>
+                    <form method="POST" action="{{ route('laporan-mingguan.reset-all') }}">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit"
+                            class="px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition text-sm flex items-center gap-2">
+                            <i class="fas fa-trash-alt"></i> Ya, Reset Sekarang
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        @endif
+
     </div>
+
 </x-app-layout>
