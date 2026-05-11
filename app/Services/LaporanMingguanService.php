@@ -196,12 +196,20 @@ class LaporanMingguanService
      */
     private function splitIntoBlocks(string $text): array
     {
+        // Strategi awal: campuran laporan terstruktur dan kiriman dokumen.
+        $mixedBlocks = $this->splitMixedStructuredAndDocumentBlocks($text);
+        if (count($mixedBlocks) > 1) return $mixedBlocks;
+
         // Strategi 0: format laporan terstruktur WhatsApp — split sebelum setiap "Tanggal :"
         if (preg_match_all('/(?:^|\n)Tanggal\s*:/im', $text, $m) && count($m[0]) > 1) {
             $parts = preg_split('/(?=\n?Tanggal\s*:)/i', $text, -1, PREG_SPLIT_NO_EMPTY);
             $parts = array_values(array_filter($parts, fn($p) => preg_match('/Tanggal\s*:/i', $p)));
             if (count($parts) > 1) return $parts;
         }
+
+        // Strategi 0b: export Telegram berisi beberapa kiriman dokumen.
+        $documentBlocks = $this->splitTelegramDocumentBlocks($text);
+        if (count($documentBlocks) > 1) return $documentBlocks;
 
         // Strategi 1: daftar bernomor  "1. ...", "2. ..."
         if (preg_match_all('/(?:^|\n)\s*\d+[\.)\-]\s+/m', $text, $m) && count($m[0]) > 1) {
@@ -223,6 +231,70 @@ class LaporanMingguanService
 
         // Fallback: kembalikan sebagai satu blok
         return [$text];
+    }
+
+    private function splitMixedStructuredAndDocumentBlocks(string $text): array
+    {
+        $lines = array_values(array_filter(
+            array_map('trim', preg_split('/\R/', $text)),
+            fn($line) => $line !== ''
+        ));
+
+        $starts = [];
+        foreach ($lines as $i => $line) {
+            if (preg_match('/^Tanggal\s*:/i', $line)) {
+                $starts[] = $i;
+                continue;
+            }
+
+            if ($this->isDocumentFileLine($line)) {
+                $senderIndex = $this->findDocumentSenderLineIndex($lines, $i);
+                $starts[] = $senderIndex ?? $i;
+            }
+        }
+
+        $starts = array_values(array_unique($starts));
+        sort($starts);
+
+        if (count($starts) <= 1) return [];
+
+        $blocks = [];
+        foreach ($starts as $i => $start) {
+            $end = ($starts[$i + 1] ?? count($lines)) - 1;
+            $blocks[] = implode("\n", array_slice($lines, $start, $end - $start + 1));
+        }
+
+        return array_values(array_filter($blocks, fn($block) => trim($block) !== ''));
+    }
+
+    private function splitTelegramDocumentBlocks(string $text): array
+    {
+        $lines = array_values(array_filter(
+            array_map('trim', preg_split('/\R/', $text)),
+            fn($line) => $line !== ''
+        ));
+
+        $fileIndexes = [];
+        foreach ($lines as $i => $line) {
+            if ($this->isDocumentFileLine($line)) {
+                $fileIndexes[] = $i;
+            }
+        }
+
+        if (count($fileIndexes) <= 1) return [];
+
+        $starts = [];
+        foreach ($fileIndexes as $fileIndex) {
+            $starts[] = $this->findDocumentSenderLineIndex($lines, $fileIndex) ?? $fileIndex;
+        }
+
+        $blocks = [];
+        foreach ($starts as $i => $start) {
+            $end = ($starts[$i + 1] ?? count($lines)) - 1;
+            $blocks[] = implode("\n", array_slice($lines, $start, $end - $start + 1));
+        }
+
+        return array_values(array_filter($blocks, fn($block) => $this->isDocumentMessage($block)));
     }
 
     public function parseText(string $text): array
@@ -537,6 +609,56 @@ class LaporanMingguanService
         );
     }
 
+    private function isDocumentFileLine(string $line): bool
+    {
+        return (bool) preg_match('/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|odt|ods|odp|txt|csv|zip|rar)\b/i', $line);
+    }
+
+    private function isDocumentExportNoiseLine(string $line): bool
+    {
+        $line = trim($line);
+
+        return $line === ''
+            || preg_match('/^In reply to/i', $line)
+            || preg_match('/^Not included/i', $line)
+            || preg_match('/^change data exporting/i', $line)
+            || preg_match('/^\d+(\.\d+)?\s*(B|KB|MB|GB)$/i', $line)
+            || preg_match('/^\d{1,2}:\d{2}$/', $line);
+    }
+
+    private function isStructuredReportLine(string $line): bool
+    {
+        return (bool) preg_match('/^(Tanggal|Nama\s+Kegiatan|Lokasi|Nama\s+Pelaksana|Keterangan|Hasil\s+Kegiatan|Kendala)\s*:/i', trim($line));
+    }
+
+    private function findDocumentSenderLineIndex(array $lines, int $fileLineIdx): ?int
+    {
+        for ($i = $fileLineIdx - 1; $i >= 0; $i--) {
+            $candidate = trim($lines[$i]);
+            if ($this->isStructuredReportLine($candidate)) {
+                return null;
+            }
+            if (!$this->isDocumentExportNoiseLine($candidate) && !$this->isDocumentFileLine($candidate)) {
+                return $i;
+            }
+        }
+
+        return null;
+    }
+
+    private function extractDocumentCaption(array $lines, int $fileLineIdx): string
+    {
+        for ($i = $fileLineIdx + 1; $i < count($lines); $i++) {
+            $candidate = trim($lines[$i]);
+            if ($this->isDocumentFileLine($candidate)) break;
+            if (!$this->isDocumentExportNoiseLine($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return '';
+    }
+
     /**
      * Parse pesan chat yang hanya berisi kiriman file/dokumen (tanpa format kegiatan).
      *
@@ -602,15 +724,12 @@ class LaporanMingguanService
             if ($ts) $result['tanggal'] = date('Y-m-d', $ts);
         }
 
-        // Baris pertama (sebelum nama file) = kemungkinan nama pengirim
+        // Baris pengirim berada sebelum nama file. Pada export Telegram
+        // bisa tersisip baris "In reply to this message".
         $senderName = '';
-        if ($fileLineIdx !== null && $fileLineIdx > 0) {
-            $candidate = $lines[$fileLineIdx - 1];
-            // Abaikan jika baris itu terlihat seperti jam/tanggal/ukuran
-            if (!preg_match('/^\d{1,2}[:\-\/]\d{2}/', $candidate)
-                && !preg_match('/^\d+(\.\d+)?\s*(KB|MB)/i', $candidate)) {
-                $senderName = $candidate;
-            }
+        if ($fileLineIdx !== null) {
+            $senderLineIdx = $this->findDocumentSenderLineIndex($lines, $fileLineIdx);
+            if ($senderLineIdx !== null) $senderName = $lines[$senderLineIdx];
         }
 
         // Cari PIC yang cocok dari database
@@ -666,10 +785,17 @@ class LaporanMingguanService
             }
         }
 
+        if (empty($result['pic'])) {
+            $result['pic'] = 'Belum diketahui';
+        }
+
         // Nama kegiatan generik yang informatif
         $result['nama_kegiatan']   = 'Menyampaikan surat/dokumen terkait (' . $docName . ')';
-        $result['hasil_deskripsi'] = $this->generateHasilOtomatis($result['nama_kegiatan'], 'Selesai');
-        $result['prioritas']       = $this->detectPrioritas($docName);
+        $caption = $this->extractDocumentCaption($lines, $fileLineIdx);
+        $result['hasil_deskripsi'] = $caption !== ''
+            ? $caption
+            : $this->generateHasilOtomatis($result['nama_kegiatan'], 'Selesai');
+        $result['prioritas']       = $this->detectPrioritas($caption !== '' ? $caption : $docName);
 
         // Auto tindak lanjut
         if (empty($result['keterangan_tindak_lanjut'])) {
@@ -923,4 +1049,3 @@ class LaporanMingguanService
         return trim(implode("\n", $clean));
     }
 }
-
