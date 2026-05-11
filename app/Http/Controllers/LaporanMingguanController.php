@@ -8,6 +8,7 @@ use App\Http\Requests\StoreLaporanMingguanRequest;
 use App\Http\Requests\UpdateLaporanMingguanRequest;
 use App\Http\Requests\ExportLaporanMingguanRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class LaporanMingguanController extends Controller
 {
@@ -35,8 +36,7 @@ class LaporanMingguanController extends Controller
     public function store(StoreLaporanMingguanRequest $request)
     {
         $data = $this->laporanService->prepareDataForStorage($request->validated());
-        $data['created_by'] = auth()->id();
-        $data['updated_by'] = auth()->id();
+        $data = array_merge($data, $this->auditUserData(true));
         LaporanMingguan::create($data);
 
         return redirect()->route('laporan-mingguan.index')->with('success', 'Data laporan berhasil ditambahkan.');
@@ -46,7 +46,7 @@ class LaporanMingguanController extends Controller
     public function update(UpdateLaporanMingguanRequest $request, LaporanMingguan $laporanMingguan)
     {
         $data = $this->laporanService->prepareDataForStorage($request->validated());
-        $data['updated_by'] = auth()->id();
+        $data = array_merge($data, $this->auditUserData(false));
         $laporanMingguan->update($data);
 
         return redirect()->route('laporan-mingguan.index')->with('success', 'Data laporan berhasil diperbarui.');
@@ -117,9 +117,7 @@ class LaporanMingguanController extends Controller
                 'hasil_deskripsi'           => $item['hasil_deskripsi'] ?? '',
                 'keterangan_tindak_lanjut'  => $item['keterangan_tindak_lanjut'] ?? '',
                 'pic'                       => $item['pic'] ?? '',
-                'created_by'                => auth()->id(),
-                'updated_by'                => auth()->id(),
-            ]);
+            ] + $this->auditUserData(true));
             $count++;
         }
 
@@ -145,5 +143,26 @@ class LaporanMingguanController extends Controller
 
         return redirect()->route('laporan-mingguan.index')
             ->with('success', 'Semua data laporan mingguan berhasil direset.');
+    }
+
+    private function auditUserData(bool $includeCreatedBy): array
+    {
+        static $hasCreatedBy = null;
+        static $hasUpdatedBy = null;
+
+        $hasCreatedBy ??= Schema::hasColumn('laporan_mingguans', 'created_by');
+        $hasUpdatedBy ??= Schema::hasColumn('laporan_mingguans', 'updated_by');
+
+        $data = [];
+
+        if ($includeCreatedBy && $hasCreatedBy) {
+            $data['created_by'] = auth()->id();
+        }
+
+        if ($hasUpdatedBy) {
+            $data['updated_by'] = auth()->id();
+        }
+
+        return $data;
     }
 }
