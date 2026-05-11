@@ -20,7 +20,7 @@ class LaporanMingguanController extends Controller
 
     public function index()
     {
-        $laporans = LaporanMingguan::orderBy('tanggal', 'desc')->get();
+        $laporans = LaporanMingguan::with(['createdBy', 'updatedBy'])->orderBy('tanggal', 'desc')->get();
         $duplicateKeys = $this->laporanService->getDuplicateKeys($laporans);
 
         return view('laporan-mingguan.index', compact('laporans', 'duplicateKeys'));
@@ -35,6 +35,8 @@ class LaporanMingguanController extends Controller
     public function store(StoreLaporanMingguanRequest $request)
     {
         $data = $this->laporanService->prepareDataForStorage($request->validated());
+        $data['created_by'] = auth()->id();
+        $data['updated_by'] = auth()->id();
         LaporanMingguan::create($data);
 
         return redirect()->route('laporan-mingguan.index')->with('success', 'Data laporan berhasil ditambahkan.');
@@ -44,6 +46,7 @@ class LaporanMingguanController extends Controller
     public function update(UpdateLaporanMingguanRequest $request, LaporanMingguan $laporanMingguan)
     {
         $data = $this->laporanService->prepareDataForStorage($request->validated());
+        $data['updated_by'] = auth()->id();
         $laporanMingguan->update($data);
 
         return redirect()->route('laporan-mingguan.index')->with('success', 'Data laporan berhasil diperbarui.');
@@ -114,6 +117,8 @@ class LaporanMingguanController extends Controller
                 'hasil_deskripsi'           => $item['hasil_deskripsi'] ?? '',
                 'keterangan_tindak_lanjut'  => $item['keterangan_tindak_lanjut'] ?? '',
                 'pic'                       => $item['pic'] ?? '',
+                'created_by'                => auth()->id(),
+                'updated_by'                => auth()->id(),
             ]);
             $count++;
         }

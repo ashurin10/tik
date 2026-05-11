@@ -6,6 +6,8 @@
         showDeleteModal: false,
         showExportModal: false,
         showResetModal: false,
+        showInfoModal: false,
+        auditInfo: {},
         filterBulan: '',
         filterSearch: '',
         filterTanggal: '',
@@ -19,6 +21,10 @@
             this.filterBulan   = '';
             this.filterTanggal = '';
             this.filterSearch  = '';
+        },
+        openAuditInfo(data) {
+            this.auditInfo = data;
+            this.showInfoModal = true;
         },
         exportForm: {
             start_date: '',
@@ -429,6 +435,7 @@
                             <th class="p-4 font-bold text-gray-600 text-sm">Status</th>
                             <th class="p-4 font-bold text-gray-600 text-sm">Tindak Lanjut</th>
                             <th class="p-4 font-bold text-gray-600 text-sm text-center">Aksi</th>
+                            <th class="p-4 font-bold text-gray-600 text-sm text-center">Info</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -449,6 +456,14 @@
                                 ]);
                                 $isDuplicate = in_array($key, $dupKeys);
                                 $searchTarget = strtolower($row->nama_kegiatan . ' ' . $row->lokasi . ' ' . $row->pic);
+                                $createdAt = $row->created_at ? $row->created_at->format('d/m/Y H:i') : '-';
+                                $updatedAt = $row->updated_at ? $row->updated_at->format('d/m/Y H:i') : '-';
+                                $auditInfo = [
+                                    'created_by' => optional($row->createdBy)->name ?? 'Tidak tercatat',
+                                    'created_at' => $createdAt,
+                                    'updated_by' => optional($row->updatedBy)->name ?? 'Tidak tercatat',
+                                    'updated_at' => $updatedAt,
+                                ];
                             @endphp
                             <tr id="row-{{ $row->hashid }}"
                                 x-show="matchesFilter('{{ $row->tanggal }}', '{{ addslashes($searchTarget) }}')"
@@ -508,10 +523,18 @@
                                         </button>
                                     </div>
                                 </td>
+                                <td class="p-4 text-center">
+                                    <button type="button"
+                                        @click='openAuditInfo(@json($auditInfo))'
+                                        class="w-8 h-8 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-700 hover:text-white transition-colors border border-slate-100/70 shadow-sm flex items-center justify-center"
+                                        title="Info input dan update">
+                                        <i class="fas fa-info text-xs"></i>
+                                    </button>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="p-8 text-center text-gray-500">
+                                <td colspan="10" class="p-8 text-center text-gray-500">
                                     <div class="mb-2"><i class="fas fa-folder-open text-3xl text-gray-300"></i></div>
                                     Belum ada data laporan mingguan.
                                 </td>
@@ -798,6 +821,61 @@
                             class="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-200 transition-colors flex items-center justify-center gap-2">
                             <i class="fas fa-trash-alt"></i> Ya, Hapus
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Info Input / Update -->
+        <div x-show="showInfoModal" style="display: none;"
+            class="fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <div x-show="showInfoModal" x-transition.opacity class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
+                @click="showInfoModal = false"></div>
+
+            <div x-show="showInfoModal" x-transition:enter="transition ease-out duration-300 transform"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="transition ease-in duration-200 transform"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-md mx-auto overflow-hidden z-10 relative">
+
+                <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
+                    <div>
+                        <p class="text-[0.65rem] font-bold text-gray-400 tracking-[0.2em] uppercase mb-1">RIWAYAT DATA</p>
+                        <h3 class="text-xl font-bold text-[#111827] flex items-center gap-2">
+                            <i class="fas fa-info-circle text-slate-500"></i>
+                            Info Input & Update
+                        </h3>
+                    </div>
+                    <button @click="showInfoModal = false" class="text-gray-400 hover:text-red-500 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <div class="rounded-xl border border-green-100 bg-green-50 p-4">
+                        <p class="text-xs font-bold text-green-700 uppercase mb-2">Diinput</p>
+                        <div class="flex items-center gap-3 text-sm text-gray-700">
+                            <i class="fas fa-user-plus text-green-600 w-4"></i>
+                            <span class="font-semibold" x-text="auditInfo.created_by || 'Tidak tercatat'"></span>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm text-gray-600 mt-2">
+                            <i class="far fa-clock text-green-600 w-4"></i>
+                            <span x-text="auditInfo.created_at || '-'"></span>
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                        <p class="text-xs font-bold text-blue-700 uppercase mb-2">Terakhir Diupdate</p>
+                        <div class="flex items-center gap-3 text-sm text-gray-700">
+                            <i class="fas fa-user-edit text-blue-600 w-4"></i>
+                            <span class="font-semibold" x-text="auditInfo.updated_by || 'Tidak tercatat'"></span>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm text-gray-600 mt-2">
+                            <i class="far fa-clock text-blue-600 w-4"></i>
+                            <span x-text="auditInfo.updated_at || '-'"></span>
+                        </div>
                     </div>
                 </div>
             </div>
