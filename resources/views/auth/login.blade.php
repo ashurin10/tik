@@ -62,8 +62,8 @@
         </div>
 
         <!-- Right Side: Login Form -->
-        <div class="w-full md:w-1/2 flex items-center justify-center p-8 md:p-16 bg-white">
-            <div class="w-full max-w-sm space-y-6">
+        <div class="w-full md:w-1/2 flex items-center justify-center p-8 md:px-12 lg:px-16 bg-white">
+            <div class="w-full max-w-md space-y-6">
                 <div class="text-left">
                     <h2 class="text-3xl font-bold tracking-tight text-gray-900">
                         Wilujeng Sumping!
@@ -100,19 +100,21 @@
                         <div class="space-y-4">
                             <!-- Captcha -->
                             <div>
-                                <label for="captcha" class="block text-sm font-medium leading-6 text-gray-900 mb-1">Kode
-                                    Kaamanan</label>
-                                <div class="flex gap-4">
-                                    <div class="w-1/2">
-                                        <input id="captcha" name="captcha" type="text" required
-                                            class="block w-full rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[#2563EB] sm:text-sm sm:leading-6"
-                                            placeholder="Lebetkeun kode">
+                                <label for="captcha" class="block text-sm font-medium leading-6 text-gray-900 mb-1">Lebetken Captcha</label>
+                                <div class="space-y-2">
+                                    <div class="relative">
+                                        <img id="captcha-image" src="{{ route('captcha.generate') }}" alt="Captcha ilmu pengetahuan"
+                                            class="h-12 w-full rounded-md border border-gray-200 bg-white object-fill">
+                                        <button type="button"
+                                            onclick="document.getElementById('captcha-image').src='{{ route('captcha.generate') }}?'+Math.random(); document.getElementById('captcha').value='';"
+                                            class="absolute right-1.5 top-1.5 inline-flex h-7 w-7 items-center justify-center rounded-md bg-white text-xs text-gray-500 shadow-sm ring-1 ring-inset ring-gray-200 hover:text-[#2563EB] transition"
+                                            title="Ganti pertanyaan">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
                                     </div>
-                                    <div class="w-1/2 flex items-center">
-                                        <img src="{{ route('captcha.generate') }}" alt="Captcha"
-                                            class="h-10 border rounded cursor-pointer"
-                                            onclick="this.src='{{ route('captcha.generate') }}?'+Math.random()">
-                                    </div>
+                                    <input id="captcha" name="captcha" type="text" required
+                                        class="block w-full rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[#2563EB] sm:text-sm sm:leading-6"
+                                        placeholder="Jawaban captcha">
                                 </div>
                             </div>
                         </div>

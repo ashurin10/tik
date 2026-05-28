@@ -85,19 +85,19 @@ class LaporanMingguanController extends Controller
     public function searchPics(Request $request)
     {
         $suggestions = $this->laporanService->searchPics($request->get('q', ''));
-        return response()->json($suggestions);
+        return response()->json($suggestions, 200, [], JSON_INVALID_UTF8_IGNORE);
     }
 
     public function searchKegiatan(Request $request)
     {
         $kegiatans = $this->laporanService->searchKegiatan($request->get('q', ''));
-        return response()->json($kegiatans);
+        return response()->json($kegiatans, 200, [], JSON_INVALID_UTF8_IGNORE);
     }
 
     public function parseText(Request $request)
     {
         $results = $this->laporanService->parseMultipleTexts($request->input('text', ''));
-        return response()->json($results);
+        return response()->json($results, 200, [], JSON_INVALID_UTF8_IGNORE);
     }
 
     public function bulkStore(Request $request)
@@ -121,7 +121,7 @@ class LaporanMingguanController extends Controller
             $count++;
         }
 
-        return response()->json(['success' => true, 'count' => $count]);
+        return response()->json(['success' => true, 'count' => $count], 200, [], JSON_INVALID_UTF8_IGNORE);
     }
 
     public function resetAll(Request $request)
@@ -129,7 +129,7 @@ class LaporanMingguanController extends Controller
         // Hanya admin yang boleh melakukan reset
         if (!auth()->user()->isAdmin()) {
             if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Akses ditolak. Hanya admin yang dapat mereset data.'], 403);
+                return response()->json(['success' => false, 'message' => 'Akses ditolak. Hanya admin yang dapat mereset data.'], 403, [], JSON_INVALID_UTF8_IGNORE);
             }
             return redirect()->route('laporan-mingguan.index')
                 ->with('error', 'Akses ditolak. Hanya admin yang dapat mereset data.');
@@ -138,7 +138,7 @@ class LaporanMingguanController extends Controller
         LaporanMingguan::truncate();
 
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Semua data laporan mingguan berhasil direset.']);
+            return response()->json(['success' => true, 'message' => 'Semua data laporan mingguan berhasil direset.'], 200, [], JSON_INVALID_UTF8_IGNORE);
         }
 
         return redirect()->route('laporan-mingguan.index')

@@ -459,9 +459,9 @@
                                 $createdAt = $row->created_at ? $row->created_at->format('d/m/Y H:i') : '-';
                                 $updatedAt = $row->updated_at ? $row->updated_at->format('d/m/Y H:i') : '-';
                                 $auditInfo = [
-                                    'created_by' => optional($row->createdBy)->name ?? 'Tidak tercatat',
+                                    'created_by' => optional($row->createdBy)->name ?? ($row->created_by ? 'User ID ' . $row->created_by : 'Tidak tercatat'),
                                     'created_at' => $createdAt,
-                                    'updated_by' => optional($row->updatedBy)->name ?? 'Tidak tercatat',
+                                    'updated_by' => optional($row->updatedBy)->name ?? ($row->updated_by ? 'User ID ' . $row->updated_by : 'Tidak tercatat'),
                                     'updated_at' => $updatedAt,
                                 ];
                             @endphp

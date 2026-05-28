@@ -32,8 +32,12 @@ class LoginRequest extends FormRequest
             'captcha' => [
                 'required',
                 function ($attribute, $value, $fail) {
-                    if (strtoupper($value) !== session('captcha_code')) {
-                        $fail('Kodeu Captcha lepat, mangga cobian deui.'); // "Captcha code wrong, please try again" in Sundanese (approx)
+                    $answer = $this->normalizeCaptchaAnswer((string) $value);
+                    $validAnswers = session('captcha_answer', [session('captcha_code')]);
+                    $validAnswers = array_map(fn($item) => $this->normalizeCaptchaAnswer((string) $item), (array) $validAnswers);
+
+                    if (!in_array($answer, $validAnswers, true)) {
+                        $fail('Jawaban captcha ilmu pengetahuan salah, silakan coba lagi.');
                     }
                 }
             ],
@@ -108,5 +112,14 @@ class LoginRequest extends FormRequest
     public function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
+    }
+
+    private function normalizeCaptchaAnswer(string $value): string
+    {
+        return Str::of($value)
+            ->lower()
+            ->replace([' ', '.', ',', '-', '_'], '')
+            ->ascii()
+            ->toString();
     }
 }

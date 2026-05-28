@@ -175,6 +175,8 @@ class LaporanMingguanService
      */
     public function parseMultipleTexts(string $text): array
     {
+        // Ensure text is valid UTF-8 to avoid malformed character issues
+        $text = $this->ensureUtf8($text);
         $blocks = $this->splitIntoBlocks($text);
 
         $results = [];
@@ -299,6 +301,9 @@ class LaporanMingguanService
 
     public function parseText(string $text): array
     {
+        // Normalize encoding to UTF-8 to avoid invalid byte sequences
+        $text = $this->ensureUtf8($text);
+
         $result = [
             'tanggal'                  => '',
             'nama_kegiatan'            => '',
@@ -476,6 +481,25 @@ class LaporanMingguanService
         }
 
         return ucfirst(lcfirst($namaKegiatan)) . $suffix;
+    }
+
+    /**
+     * Ensure the given text is valid UTF-8. Strip or convert invalid bytes.
+     */
+    private function ensureUtf8(string $text): string
+    {
+        if ($text === '') return $text;
+
+        // Try to strip invalid UTF-8 sequences
+        $clean = @iconv('UTF-8', 'UTF-8//IGNORE', $text);
+        if ($clean !== false && $clean !== null) {
+            return $clean;
+        }
+
+        // Fallback: try common single-byte encodings
+        $converted = @mb_convert_encoding($text, 'UTF-8', 'ISO-8859-1');
+        $clean = @iconv('UTF-8', 'UTF-8//IGNORE', $converted);
+        return $clean === false ? '' : $clean;
     }
 
     /**

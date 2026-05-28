@@ -36,7 +36,9 @@ class AppServiceProvider extends ServiceProvider
             $menus = collect();
 
             if ($user) {
-                $role = $user->peran; // Assuming 'peran' column stores 'admin', 'user'
+                $role = $user->peran;
+
+                $activeMenuPrefix = $this->activeMenuPrefix(request()->route()?->getName());
 
                 $menus = \App\Models\Menu::whereNull('parent_id')
                     ->whereHas('roles', function ($q) use ($role) {
@@ -51,9 +53,56 @@ class AppServiceProvider extends ServiceProvider
                     ])
                     ->orderBy('order')
                     ->get();
+
+                if ($activeMenuPrefix) {
+                    $menus = $menus
+                        ->map(function ($menu) use ($activeMenuPrefix) {
+                            $menu->setRelation(
+                                'children',
+                                $menu->children
+                                    ->filter(fn($child) => $this->menuMatchesPrefix($child, $activeMenuPrefix))
+                                    ->values()
+                            );
+
+                            return $menu;
+                        })
+                        ->filter(fn($menu) => $this->menuMatchesPrefix($menu, $activeMenuPrefix) || $menu->children->isNotEmpty())
+                        ->values();
+                }
             }
 
             $view->with('sidebarMenus', $menus);
         });
+    }
+
+    private function activeMenuPrefix(?string $routeName): ?string
+    {
+        if (!$routeName) {
+            return null;
+        }
+
+        foreach (['users.', 'menus.', 'database-backup.'] as $prefix) {
+            if (str_starts_with($routeName, $prefix)) {
+                return 'admin-portal';
+            }
+        }
+
+        foreach (['laporan-mingguan.', 'urls.', 'aset-tik.'] as $prefix) {
+            if (str_starts_with($routeName, $prefix)) {
+                return $prefix;
+            }
+        }
+
+        return null;
+    }
+
+    private function menuMatchesPrefix($menu, string $prefix): bool
+    {
+        if ($prefix === 'admin-portal') {
+            return is_string($menu->url) && collect(['users.', 'menus.', 'database-backup.'])
+                ->contains(fn(string $adminPrefix) => str_starts_with($menu->url, $adminPrefix));
+        }
+
+        return is_string($menu->url) && str_starts_with($menu->url, $prefix);
     }
 }

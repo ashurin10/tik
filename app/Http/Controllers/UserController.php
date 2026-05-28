@@ -11,12 +11,14 @@ class UserController extends Controller
 {
     public function index()
     {
+        abort_unless(auth()->user()?->isAdminOrSuperAdmin(), 403);
         $users = User::latest()->paginate(10);
         return view('users.index', compact('users'));
     }
 
     public function store(StoreUserRequest $request)
     {
+        abort_unless(auth()->user()?->isAdminOrSuperAdmin(), 403);
         User::create($request->validated());
 
         return redirect()->route('users.index')->with('status', 'User created successfully!');
@@ -29,6 +31,7 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user)
     {
+        abort_unless(auth()->user()?->isAdminOrSuperAdmin(), 403);
         $data = $request->validated();
 
         if ($request->has('unlock_account') && $request->unlock_account == '1') {
@@ -47,6 +50,7 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        abort_unless(auth()->user()?->isAdminOrSuperAdmin(), 403);
         if ($user->email === 'admin@example.com') {
             return back()->withErrors(['message' => 'Cannot delete the main admin account.']);
         }

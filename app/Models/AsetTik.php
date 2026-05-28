@@ -2,50 +2,70 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasHashid;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class AsetTik extends Model
 {
-    use HasFactory, SoftDeletes, HasHashid;
+    use HasHashid;
 
-    protected $table = 'aset_tik';
-    
-    protected $appends = ['hashid'];
+    protected $table = 'aset_tiks';
 
     protected $fillable = [
-        'kode_aset',
-        'nama_aset',
-        'tahun_pengadaan',
-        'kategori',
-        'jenis',
+        'kode',
+        'tracking_code',
+        'nama',
+        'kategori_id',
         'merk',
-        'model_tipe',
-        'nomor_seri',
+        'model',
+        'serial_number',
         'spesifikasi',
+        'tahun_perolehan',
+        'nilai',
         'kondisi',
         'status',
-        'unit_pengguna',
-        'penanggung_jawab',
-        'pemilik_aset',
-        'lokasi',
-        'catatan',
+        'lokasi_id',
+        'penanggung_jawab_id',
+        'keterangan',
     ];
 
-    protected $casts = [
-        'spesifikasi' => 'array', // Jika simpan JSON
-    ];
-
-    // Relasi
-    public function mutasi()
+    protected static function booted(): void
     {
-        return $this->hasMany(TransaksiMutasi::class, 'aset_id');
+        static::creating(function (AsetTik $aset) {
+            if (!$aset->tracking_code) {
+                $aset->tracking_code = static::makeTrackingCode($aset->kode);
+            }
+        });
     }
 
-    public function peminjaman()
+    public static function makeTrackingCode(string $kode): string
     {
-        return $this->hasMany(TransaksiPeminjaman::class, 'aset_id');
+        return 'TIK-' . Str::of($kode)->upper()->replaceMatches('/[^A-Z0-9]+/', '-')->trim('-');
+    }
+
+    public function kategori()
+    {
+        return $this->belongsTo(AsetTikKategori::class, 'kategori_id');
+    }
+
+    public function lokasi()
+    {
+        return $this->belongsTo(AsetTikLokasi::class, 'lokasi_id');
+    }
+
+    public function penanggungJawab()
+    {
+        return $this->belongsTo(AsetTikPenanggungJawab::class, 'penanggung_jawab_id');
+    }
+
+    public function transaksi()
+    {
+        return $this->hasMany(AsetTikTransaksi::class, 'aset_tik_id');
+    }
+
+    public function riwayat()
+    {
+        return $this->hasMany(AsetTikRiwayat::class, 'aset_tik_id');
     }
 }

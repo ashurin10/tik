@@ -79,10 +79,6 @@
                                                 {{ $menu->name }}
                                             </span>
 
-                                            @if(in_array($menu->name, ['Mutasi Aset', 'Pemeliharaan']))
-                                                <div class="w-2 h-2 shrink-0 rounded-full bg-red-500 mr-1 shadow-sm shadow-red-200"></div>
-                                            @endif
-
                                             @if($isToggle)
                                                 <i class="fas fa-chevron-down text-xs text-gray-400 transition-transform duration-200"
                                                     :class="{'transform rotate-180': open}"></i>
@@ -101,17 +97,12 @@
                                                             $childUrl = $isPlaceholder ? '#' : ($child->url ? url($child->url) : '#');
                                                         }
                                                         $isChildActive = $child->url && Route::has($child->url) && request()->routeIs($child->url . '*');
-                                                        $showBadge = in_array($child->name, ['Request Approval', 'Jadwal Maintenance']);
                                                     @endphp
                                                     <a href="{{ $childUrl }}"
                                                         @if($isPlaceholder) onclick="alert('Menu ini sedang dalam tahap pengembangan.'); return false;" @endif
                                                         class="block px-2 py-2 text-sm rounded-lg transition-colors {{ $isChildActive ? 'text-blue-600 font-bold bg-blue-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50' }}">
                                                         <div class="flex items-center justify-between">
                                                             <span>{{ $child->name }}</span>
-                                                            @if($showBadge)
-                                                                <span
-                                                                    class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm shadow-red-200">2</span>
-                                                            @endif
                                                         </div>
                                                     </a>
                                                 @endforeach
@@ -135,11 +126,6 @@
                             <h6 class="text-sm font-bold text-gray-900 truncate">{{ Auth::user()->name }}</h6>
                             <p class="text-xs text-gray-500 capitalize">{{ Auth::user()->peran ?? 'User' }}</p>
                         </div>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button class="text-gray-400 hover:text-red-500 transition-colors"><i
-                                    class="fas fa-power-off"></i></button>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -249,10 +235,6 @@
                         <div class="flex-1 overflow-hidden">
                             <h6 class="text-sm font-bold text-gray-900 truncate">{{ Auth::user()->name }}</h6>
                         </div>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button class="text-gray-400 hover:text-red-500 transition-colors"><i class="fas fa-power-off"></i></button>
-                        </form>
                     </div>
                 </div>
             </aside>
@@ -265,6 +247,11 @@
                 class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-end px-6 sticky top-0 z-50 shrink-0">
                 <!-- Right Actions -->
                 <div class="flex items-center gap-4 relative">
+                    <a href="{{ route('dashboard') }}"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition">
+                        <i class="fas fa-th-large text-xs"></i>
+                        <span class="hidden sm:inline">Portal</span>
+                    </a>
                     <button
                         class="w-10 h-10 rounded-full bg-gray-50 hover:bg-red-50 flex items-center justify-center text-gray-600 hover:text-red-600 relative transition-all border border-gray-100">
                         <i class="fas fa-bell"></i>

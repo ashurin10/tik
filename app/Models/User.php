@@ -68,4 +68,12 @@ class User extends Authenticatable
     {
         return $this->peran === 'admin';
     }
+
+    /**
+     * Cek apakah user adalah admin atau superadmin.
+     */
+    public function isAdminOrSuperAdmin(): bool
+    {
+        return in_array($this->peran, ['admin', 'superadmin'], true);
+    }
 }
