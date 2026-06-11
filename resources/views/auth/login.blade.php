@@ -100,10 +100,10 @@
                         <div class="space-y-4">
                             <!-- Captcha -->
                             <div>
-                                <label for="captcha" class="block text-sm font-medium leading-6 text-gray-900 mb-1">Lebetken Captcha</label>
+                                <label for="captcha" class="block text-sm font-medium leading-6 text-gray-900 mb-1">Captcha Teknologi & Keamanan</label>
                                 <div class="space-y-2">
                                     <div class="relative">
-                                        <img id="captcha-image" src="{{ route('captcha.generate') }}" alt="Captcha ilmu pengetahuan"
+                                        <img id="captcha-image" src="{{ route('captcha.generate') }}" alt="Captcha teknologi dan keamanan"
                                             class="h-12 w-full rounded-md border border-gray-200 bg-white object-fill">
                                         <button type="button"
                                             onclick="document.getElementById('captcha-image').src='{{ route('captcha.generate') }}?'+Math.random(); document.getElementById('captcha').value='';"

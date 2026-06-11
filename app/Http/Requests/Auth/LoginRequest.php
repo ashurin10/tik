@@ -37,7 +37,7 @@ class LoginRequest extends FormRequest
                     $validAnswers = array_map(fn($item) => $this->normalizeCaptchaAnswer((string) $item), (array) $validAnswers);
 
                     if (!in_array($answer, $validAnswers, true)) {
-                        $fail('Jawaban captcha ilmu pengetahuan salah, silakan coba lagi.');
+                        $fail('Jawaban captcha teknologi dan keamanan salah, silakan coba lagi.');
                     }
                 }
             ],
