@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -20,14 +21,12 @@ class AuthenticationTest extends TestCase
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
         $user = User::factory()->create();
-        
-        $captcha = 'ABCDE';
-        session(['captcha_code' => $captcha]);
+        $this->fakeTurnstileSuccess();
 
         $response = $this->post('/login', [
             'email' => $user->email,
             'password' => 'password',
-            'captcha' => $captcha,
+            'cf-turnstile-response' => 'valid-turnstile-token',
         ]);
 
         $this->assertAuthenticated();
@@ -37,14 +36,12 @@ class AuthenticationTest extends TestCase
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create();
-
-        $captcha = 'ABCDE';
-        session(['captcha_code' => $captcha]);
+        $this->fakeTurnstileSuccess();
 
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'wrong-password',
-            'captcha' => $captcha,
+            'cf-turnstile-response' => 'valid-turnstile-token',
         ]);
 
         $this->assertGuest();
@@ -58,5 +55,16 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
         $response->assertRedirect(route('login'));
+    }
+
+    private function fakeTurnstileSuccess(): void
+    {
+        config(['services.turnstile.secret_key' => 'test-secret-key']);
+
+        Http::fake([
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify' => Http::response([
+                'success' => true,
+            ]),
+        ]);
     }
 }

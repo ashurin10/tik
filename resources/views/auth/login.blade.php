@@ -1,4 +1,8 @@
 <x-guest-layout>
+    @once
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endonce
+
     <!-- Toast Notification (Fixed Top-Right) -->
     @if (session('status'))
         <div id="toast-notification" class="fixed top-5 right-5 z-[9999] animate-bounce"
@@ -98,24 +102,19 @@
                                 placeholder="********">
                         </div>
                         <div class="space-y-4">
-                            <!-- Captcha -->
+                            <!-- Cloudflare Turnstile -->
                             <div>
-                                <label for="captcha" class="block text-sm font-medium leading-6 text-gray-900 mb-1">Captcha Teknologi & Keamanan</label>
-                                <div class="space-y-2">
-                                    <div class="relative">
-                                        <img id="captcha-image" src="{{ route('captcha.generate') }}" alt="Captcha teknologi dan keamanan"
-                                            class="h-12 w-full rounded-md border border-gray-200 bg-white object-fill">
-                                        <button type="button"
-                                            onclick="document.getElementById('captcha-image').src='{{ route('captcha.generate') }}?'+Math.random(); document.getElementById('captcha').value='';"
-                                            class="absolute right-1.5 top-1.5 inline-flex h-7 w-7 items-center justify-center rounded-md bg-white text-xs text-gray-500 shadow-sm ring-1 ring-inset ring-gray-200 hover:text-[#2563EB] transition"
-                                            title="Ganti pertanyaan">
-                                            <i class="fas fa-sync-alt"></i>
-                                        </button>
+                                <label class="block text-sm font-medium leading-6 text-gray-900 mb-1">Verifikasi Keamanan</label>
+                                @if (config('services.turnstile.site_key'))
+                                    <div class="cf-turnstile"
+                                        data-sitekey="{{ config('services.turnstile.site_key') }}"
+                                        data-theme="light">
                                     </div>
-                                    <input id="captcha" name="captcha" type="text" required
-                                        class="block w-full rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[#2563EB] sm:text-sm sm:leading-6"
-                                        placeholder="Jawaban captcha">
-                                </div>
+                                @else
+                                    <div class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                                        Cloudflare Turnstile belum dikonfigurasi.
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -143,7 +142,7 @@
         </div>
     </div>
     </div>
-    <!-- Generic Error Modal (Email, Password, Captcha) -->
+    <!-- Generic Error Modal (Email, Password, Verification) -->
     @if ($errors->any())
         <div id="errorModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm"
             role="dialog" aria-modal="true">

@@ -5,6 +5,7 @@ namespace App\Http\Requests\Auth;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -29,17 +30,15 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
-            'captcha' => [
+            'cf-turnstile-response' => [
+                'bail',
                 'required',
+                'string',
                 function ($attribute, $value, $fail) {
-                    $answer = $this->normalizeCaptchaAnswer((string) $value);
-                    $validAnswers = session('captcha_answer', [session('captcha_code')]);
-                    $validAnswers = array_map(fn($item) => $this->normalizeCaptchaAnswer((string) $item), (array) $validAnswers);
-
-                    if (!in_array($answer, $validAnswers, true)) {
-                        $fail('Jawaban captcha teknologi dan keamanan salah, silakan coba lagi.');
+                    if (!$this->verifyTurnstileToken((string) $value)) {
+                        $fail('Verifikasi Cloudflare gagal, silakan coba lagi.');
                     }
-                }
+                },
             ],
         ];
     }
@@ -114,12 +113,26 @@ class LoginRequest extends FormRequest
         return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 
-    private function normalizeCaptchaAnswer(string $value): string
+    private function verifyTurnstileToken(string $token): bool
     {
-        return Str::of($value)
-            ->lower()
-            ->replace([' ', '.', ',', '-', '_'], '')
-            ->ascii()
-            ->toString();
+        $secret = config('services.turnstile.secret_key');
+
+        if (!$secret) {
+            return false;
+        }
+
+        try {
+            $response = Http::asForm()
+                ->timeout(10)
+                ->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => $secret,
+                    'response' => $token,
+                    'remoteip' => $this->ip(),
+                ]);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return $response->ok() && $response->json('success') === true;
     }
 }

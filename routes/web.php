@@ -1,10 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\CaptchaController;
 use Illuminate\Support\Facades\Route;
-
-Route::get('/captcha', [CaptchaController::class, 'generate'])->name('captcha.generate');
 
 Route::redirect('/', '/login');
 
