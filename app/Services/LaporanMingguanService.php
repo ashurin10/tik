@@ -377,9 +377,10 @@ class LaporanMingguanService
             $result['pic'] = trim($matches[1]);
         }
 
-        if (preg_match('/(?:lokasi|gedung|ruang|lantai)\s*[:=\-]?\s*([A-Za-z0-9\s]+)(?:\.|,|\n|$)/i', $text, $matches)
-            || preg_match('/di\s+([A-Za-z0-9\s]{3,20})(?:\.|,|\n|$)/i', $text, $matches)) {
-            $result['lokasi'] = trim($matches[0]);
+        if (preg_match('/(?:lokasi|gedung|ruang|lantai)\s*[:=\-]?\s*([A-Za-z0-9\s]+)(?:\.|,|\n|$)/i', $text, $matches)) {
+            $result['lokasi'] = trim($matches[1]);
+        } elseif (preg_match('/\bdi\s+([A-Za-z0-9\s]{3,30})(?:\.|,|\n|$)/i', $text, $matches)) {
+            $result['lokasi'] = trim($matches[1]);
         }
 
         if (preg_match('/(?:kegiatan|pekerjaan)\s*[:=\-]?\s*([A-Za-z0-9\s]+)(?:\.|,|\n|$)/i', $text, $matches)) {
@@ -662,6 +663,9 @@ class LaporanMingguanService
             if ($this->isStructuredReportLine($candidate)) {
                 return null;
             }
+            if ($this->isChatDateLine($candidate)) {
+                return null;
+            }
             if (!$this->isDocumentExportNoiseLine($candidate) && !$this->isDocumentFileLine($candidate)) {
                 return $i;
             }
@@ -683,6 +687,42 @@ class LaporanMingguanService
         return '';
     }
 
+    private function findDocumentDate(array $lines, int $fileLineIdx, string $docName): ?string
+    {
+        for ($i = $fileLineIdx - 1; $i >= 0; $i--) {
+            $candidate = trim($lines[$i]);
+
+            if ($this->isStructuredReportLine($candidate)) {
+                break;
+            }
+
+            if ($this->isChatDateLine($candidate)) {
+                return $this->parseTanggalFromText($candidate);
+            }
+        }
+
+        return $this->parseTanggalFromText($docName);
+    }
+
+    private function isChatDateLine(string $line): bool
+    {
+        $line = trim($line);
+
+        if ($line === '') {
+            return false;
+        }
+
+        if (preg_match('/^(?:senin|selasa|rabu|kamis|jumat|jum\'at|sabtu|minggu),?\s+\d{1,2}\s+[A-Za-z]+\s+\d{4}$/i', $line)) {
+            return true;
+        }
+
+        if (preg_match('/^\d{1,2}\s+[A-Za-z]+\s+\d{4}$/i', $line)) {
+            return true;
+        }
+
+        return (bool) preg_match('/^\[?\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}(?:[, ]+\d{1,2}:\d{2})?\]?$/', $line);
+    }
+
     /**
      * Parse pesan chat yang hanya berisi kiriman file/dokumen (tanpa format kegiatan).
      *
@@ -696,13 +736,6 @@ class LaporanMingguanService
      */
     private function parseDocumentMessage(string $text): array
     {
-        $monthsId = [
-            'januari'  =>'january',  'februari' =>'february', 'maret'    =>'march',
-            'april'    =>'april',    'mei'      =>'may',       'juni'     =>'june',
-            'juli'     =>'july',     'agustus'  =>'august',   'september'=>'september',
-            'oktober'  =>'october',  'november' =>'november',  'desember' =>'december',
-        ];
-
         $result = [
             'tanggal'                  => date('Y-m-d'),
             'nama_kegiatan'            => '',
@@ -740,12 +773,9 @@ class LaporanMingguanService
         // Hapus ukuran file dari nama jika ikut terseret (mis. "Notula.pdf 197.7 KB")
         $docName = trim(preg_replace('/\d+(\.\d+)?\s*(KB|MB|GB)\s*$/i', '', $docName));
 
-        // Coba ekstrak tanggal dari nama file: "Notula 20 April 2026"
-        if (preg_match('/(\d{1,2}\s+[A-Za-z]+\s+\d{4})/i', $docName, $m)) {
-            $dateStr = strtolower($m[1]);
-            $dateStr = strtr($dateStr, $monthsId);
-            $ts      = strtotime($dateStr);
-            if ($ts) $result['tanggal'] = date('Y-m-d', $ts);
+        $documentDate = $this->findDocumentDate($lines, $fileLineIdx, $docName);
+        if ($documentDate) {
+            $result['tanggal'] = $documentDate;
         }
 
         // Baris pengirim berada sebelum nama file. Pada export Telegram
@@ -1002,16 +1032,43 @@ class LaporanMingguanService
      */
     private function parseTanggalIndonesia(string $dateStr): ?string
     {
+        return $this->parseTanggalFromText($dateStr);
+    }
+
+    private function parseTanggalFromText(string $text): ?string
+    {
         $monthsId = [
             'januari'  => 'january',  'februari' => 'february', 'maret'    => 'march',
             'april'    => 'april',    'mei'      => 'may',       'juni'     => 'june',
             'juli'     => 'july',     'agustus'  => 'august',   'september'=> 'september',
             'oktober'  => 'october',  'november' => 'november',  'desember' => 'december',
+            'jan'      => 'jan',      'feb'      => 'feb',       'mar'      => 'mar',
+            'apr'      => 'apr',      'jun'      => 'jun',       'jul'      => 'jul',
+            'agu'      => 'aug',      'agt'      => 'aug',       'sep'      => 'sep',
+            'okt'      => 'oct',      'nov'      => 'nov',       'des'      => 'dec',
         ];
-        $normalized = strtolower(trim($dateStr));
-        $normalized = strtr($normalized, $monthsId);
-        $ts = strtotime($normalized);
-        return $ts ? date('Y-m-d', $ts) : null;
+
+        $patterns = [
+            '/(?:senin|selasa|rabu|kamis|jumat|jum\'at|sabtu|minggu),?\s*(\d{1,2}\s+[A-Za-z]+\s+\d{4})/i',
+            '/(\d{1,2}\s+[A-Za-z]+\s+\d{4})/i',
+            '/(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})/',
+            '/(\d{4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})/',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $text, $matches)) {
+                $normalized = strtolower(trim($matches[1]));
+                $normalized = str_replace('/', '-', $normalized);
+                $normalized = strtr($normalized, $monthsId);
+                $ts = strtotime($normalized);
+
+                if ($ts) {
+                    return date('Y-m-d', $ts);
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

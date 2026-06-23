@@ -61,13 +61,19 @@
                     },
                     body: JSON.stringify({ text: this.rawText })
                 });
+                if (!response.ok) {
+                    throw new Error('Gagal mengekstrak teks. Silakan login ulang atau coba beberapa saat lagi.');
+                }
                 const data = await response.json();
+                if (!Array.isArray(data)) {
+                    throw new Error('Format hasil ekstraksi tidak valid.');
+                }
                 this.parsedResults = data;
                 this.selectedResults = data.map((_, i) => i);
                 this.aiStep = 'review';
             } catch (error) {
                 console.error('Error parsing text:', error);
-                alert('Terjadi kesalahan saat mengekstrak data.');
+                alert(error.message || 'Terjadi kesalahan saat mengekstrak data.');
             } finally {
                 this.isAnalyzing = false;
             }

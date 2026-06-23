@@ -58,6 +58,44 @@ TEXT;
         $this->assertSame('terlampir laporan wazuh april 2026.', $results[0]['hasil_deskripsi']);
     }
 
+    public function test_parse_document_uses_chat_date_and_does_not_treat_date_as_sender(): void
+    {
+        $text = <<<TEXT
+11 Mei 2026
+Dedi Nugraha
+In reply to this message
+laporan antivirus.docx
+Not included, change data exporting settings to download.
+59.8 KB
+Terlampir laporan penggunaan antivirus april 2026
+15:27
+TEXT;
+
+        $results = app(LaporanMingguanService::class)->parseMultipleTexts($text);
+
+        $this->assertCount(1, $results);
+        $this->assertSame('2026-05-11', $results[0]['tanggal']);
+        $this->assertSame('Dedi Nugraha', $results[0]['pic']);
+        $this->assertSame('Menyampaikan surat/dokumen terkait (laporan antivirus)', $results[0]['nama_kegiatan']);
+    }
+
+    public function test_parse_document_without_sender_can_use_chat_date(): void
+    {
+        $text = <<<TEXT
+11 Mei 2026
+LAPORAN_WAZUH_OSTICKET_BULAN_APRIL 2026.docx
+Not included, change data exporting settings to download.
+3.1 MB
+terlampir laporan wazuh april 2026
+TEXT;
+
+        $results = app(LaporanMingguanService::class)->parseMultipleTexts($text);
+
+        $this->assertCount(1, $results);
+        $this->assertSame('2026-05-11', $results[0]['tanggal']);
+        $this->assertSame('Belum diketahui', $results[0]['pic']);
+    }
+
     public function test_parse_mixed_structured_report_and_document_attachment(): void
     {
         $text = <<<TEXT
