@@ -109,15 +109,21 @@
         .col-pic { width: 12%; }
         .col-status { width: 7%; text-align: center; }
         .col-tindak { width: 16%; }
+        .table-signature-group {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
 
         /* Tanda Tangan */
         .ttd-container {
             width: 100%;
             margin-top: 40px;
+            display: flex;
+            justify-content: flex-end;
+            break-inside: avoid;
             page-break-inside: avoid;
         }
         .ttd-box {
-            float: right;
             width: 320px;
             text-align: left;
             margin-right: -10px;
@@ -146,10 +152,22 @@
                 background-color: #f0f0f0 !important;
                 -webkit-print-color-adjust: exact;
             }
+            thead {
+                display: table-header-group;
+            }
+            tfoot {
+                display: table-footer-group;
+            }
         }
     </style>
 </head>
 <body onload="window.print()">
+    @php
+        $laporanCount = count($laporans);
+        $carryRowCount = !empty($penandatangan) && $laporanCount > 0 ? min(2, $laporanCount) : 0;
+        $mainLaporans = $carryRowCount > 0 ? $laporans->slice(0, $laporanCount - $carryRowCount)->values() : $laporans;
+        $signatureLaporans = $carryRowCount > 0 ? $laporans->slice($laporanCount - $carryRowCount)->values() : collect();
+    @endphp
 
     <!-- Container Utama -->
     <div class="kop-surat-inner">
@@ -174,6 +192,7 @@
     </div>
 
     <!-- Data Table -->
+    @if($mainLaporans->count() > 0 || $laporanCount === 0)
     <table>
         <thead>
             <tr>
@@ -189,7 +208,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($laporans as $index => $row)
+            @foreach($mainLaporans as $index => $row)
             <tr>
                 <td class="col-no">{{ $index + 1 }}</td>
                 <td class="col-tanggal">{{ \Carbon\Carbon::parse($row->tanggal)->locale('id')->isoFormat('D MMMM Y') }}</td>
@@ -202,32 +221,67 @@
                 <td class="col-tindak">{{ $row->keterangan_tindak_lanjut ?? '-' }}</td>
             </tr>
             @endforeach
-            @if(count($laporans) === 0)
+            @if($laporanCount === 0)
             <tr>
                 <td colspan="9" style="text-align: center; padding: 20px;">Tidak ada kegiatan pada periode ini.</td>
             </tr>
             @endif
         </tbody>
     </table>
+    @endif
 
     <!-- Tanda Tangan Block -->
     @if(!empty($penandatangan))
-    <div class="ttd-container">
-        <div class="ttd-box">
-            <div class="ttd-tanggal">Subang, {{ !empty($tanggalTtd) ? \Carbon\Carbon::parse($tanggalTtd)->locale('id')->isoFormat('D MMMM Y') : \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}</div>
-            <div style="margin-bottom: 3px;">Ditandatangani secara elektronik oleh</div>
-            <div class="ttd-jabatan">{{ $jabatan }}</div>
-            
-            <br><br>
-            <div class="ttd-placeholder" style="padding-left: 1em;">&nbsp;${ttd_pengirim}</div>
-            <br><br>
+    <div class="table-signature-group">
+        @if($signatureLaporans->count() > 0)
+        <table>
+            <thead>
+                <tr>
+                    <th class="col-no">No</th>
+                    <th class="col-tanggal">Tanggal</th>
+                    <th class="col-kegiatan">Nama Kegiatan</th>
+                    <th class="col-lokasi">Lokasi</th>
+                    <th class="col-hasil">Hasil/Deskripsi<br>Singkat</th>
+                    <th class="col-prioritas">Prioritas</th>
+                    <th class="col-pic">PIC</th>
+                    <th class="col-status">Status</th>
+                    <th class="col-tindak">Keterangan/Tindak Lanjut</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($signatureLaporans as $index => $row)
+                <tr>
+                    <td class="col-no">{{ $mainLaporans->count() + $index + 1 }}</td>
+                    <td class="col-tanggal">{{ \Carbon\Carbon::parse($row->tanggal)->locale('id')->isoFormat('D MMMM Y') }}</td>
+                    <td class="col-kegiatan">{{ $row->nama_kegiatan }}</td>
+                    <td class="col-lokasi">{{ $row->lokasi }}</td>
+                    <td class="col-hasil">{{ $row->hasil_deskripsi ?? '-' }}</td>
+                    <td class="col-prioritas">{{ $row->prioritas }}</td>
+                    <td class="col-pic">{{ str_replace(',', ', ', $row->pic) }}</td>
+                    <td class="col-status">{{ $row->status }}</td>
+                    <td class="col-tindak">{{ $row->keterangan_tindak_lanjut ?? '-' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @endif
 
-            <div class="ttd-nama">{{ $penandatangan }}</div>
-            @if(!empty($pangkat))
-            <div class="ttd-pangkat">{{ $pangkat }}</div>
-            @endif
+        <div class="ttd-container">
+            <div class="ttd-box">
+                <div class="ttd-tanggal">Subang, {{ !empty($tanggalTtd) ? \Carbon\Carbon::parse($tanggalTtd)->locale('id')->isoFormat('D MMMM Y') : \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}</div>
+                <div style="margin-bottom: 3px;">Ditandatangani secara elektronik oleh</div>
+                <div class="ttd-jabatan">{{ $jabatan }}</div>
+                
+                <br><br>
+                <div class="ttd-placeholder" style="padding-left: 1em;">&nbsp;${ttd_pengirim}</div>
+                <br><br>
+
+                <div class="ttd-nama">{{ $penandatangan }}</div>
+                @if(!empty($pangkat))
+                <div class="ttd-pangkat">{{ $pangkat }}</div>
+                @endif
+            </div>
         </div>
-        <div style="clear: both;"></div>
     </div>
     @endif
 
