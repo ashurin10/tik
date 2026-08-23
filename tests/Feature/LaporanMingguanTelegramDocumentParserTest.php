@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\LaporanMingguanService;
+use App\Models\LaporanMingguan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -94,6 +95,72 @@ TEXT;
         $this->assertCount(1, $results);
         $this->assertSame('2026-05-11', $results[0]['tanggal']);
         $this->assertSame('Belum diketahui', $results[0]['pic']);
+    }
+
+    public function test_multiple_documents_inherit_the_nearest_chat_date(): void
+    {
+        $text = <<<TEXT
+11 Mei 2026
+Dedi Nugraha
+laporan antivirus.docx
+59.8 KB
+Terlampir laporan antivirus
+sae
+laporan wazuh.docx
+3.1 MB
+Terlampir laporan wazuh
+12 Mei 2026
+Tio
+laporan server.pdf
+1.2 MB
+Terlampir laporan server
+TEXT;
+
+        $results = app(LaporanMingguanService::class)->parseMultipleTexts($text);
+
+        $this->assertCount(3, $results);
+        $this->assertSame('2026-05-11', $results[0]['tanggal']);
+        $this->assertSame('2026-05-11', $results[1]['tanggal']);
+        $this->assertSame('2026-05-12', $results[2]['tanggal']);
+    }
+
+    public function test_document_from_sender_uses_canonical_pic_name_from_history(): void
+    {
+        LaporanMingguan::create([
+            'tanggal' => '2026-05-01',
+            'nama_kegiatan' => 'Kegiatan sebelumnya',
+            'lokasi' => '-',
+            'prioritas' => 'Sedang',
+            'pic' => 'Muhamad Furqon',
+            'status' => 'Selesai',
+        ]);
+
+        $text = <<<TEXT
+11 Mei 2026
+Document from Muhamad FurQon
+laporan jaringan.pdf
+1.2 MB
+Terlampir laporan jaringan
+TEXT;
+
+        $result = app(LaporanMingguanService::class)->parseMultipleTexts($text)[0];
+
+        $this->assertSame('Muhamad Furqon', $result['pic']);
+    }
+
+    public function test_document_from_label_is_removed_when_pic_is_not_in_history(): void
+    {
+        $text = <<<TEXT
+11 Mei 2026
+Document from Nama Baru
+laporan jaringan.pdf
+1.2 MB
+Terlampir laporan jaringan
+TEXT;
+
+        $result = app(LaporanMingguanService::class)->parseMultipleTexts($text)[0];
+
+        $this->assertSame('Nama Baru', $result['pic']);
     }
 
     public function test_parse_mixed_structured_report_and_document_attachment(): void

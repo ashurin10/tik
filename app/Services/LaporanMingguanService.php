@@ -263,7 +263,12 @@ class LaporanMingguanService
         $blocks = [];
         foreach ($starts as $i => $start) {
             $end = ($starts[$i + 1] ?? count($lines)) - 1;
-            $blocks[] = implode("\n", array_slice($lines, $start, $end - $start + 1));
+            $blockLines = array_slice($lines, $start, $end - $start + 1);
+            $chatDate = $this->findNearestChatDateLine($lines, $start);
+            if ($chatDate !== null && !$this->isChatDateLine($blockLines[0] ?? '')) {
+                array_unshift($blockLines, $chatDate);
+            }
+            $blocks[] = implode("\n", $blockLines);
         }
 
         return array_values(array_filter($blocks, fn($block) => trim($block) !== ''));
@@ -293,7 +298,12 @@ class LaporanMingguanService
         $blocks = [];
         foreach ($starts as $i => $start) {
             $end = ($starts[$i + 1] ?? count($lines)) - 1;
-            $blocks[] = implode("\n", array_slice($lines, $start, $end - $start + 1));
+            $blockLines = array_slice($lines, $start, $end - $start + 1);
+            $chatDate = $this->findNearestChatDateLine($lines, $start);
+            if ($chatDate !== null && !$this->isChatDateLine($blockLines[0] ?? '')) {
+                array_unshift($blockLines, $chatDate);
+            }
+            $blocks[] = implode("\n", $blockLines);
         }
 
         return array_values(array_filter($blocks, fn($block) => $this->isDocumentMessage($block)));
@@ -723,6 +733,17 @@ class LaporanMingguanService
         return (bool) preg_match('/^\[?\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}(?:[, ]+\d{1,2}:\d{2})?\]?$/', $line);
     }
 
+    private function findNearestChatDateLine(array $lines, int $beforeIndex): ?string
+    {
+        for ($i = $beforeIndex - 1; $i >= 0; $i--) {
+            if ($this->isChatDateLine($lines[$i])) {
+                return trim($lines[$i]);
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Parse pesan chat yang hanya berisi kiriman file/dokumen (tanpa format kegiatan).
      *
@@ -785,6 +806,7 @@ class LaporanMingguanService
             $senderLineIdx = $this->findDocumentSenderLineIndex($lines, $fileLineIdx);
             if ($senderLineIdx !== null) $senderName = $lines[$senderLineIdx];
         }
+        $senderName = $this->cleanDocumentSenderName($senderName);
 
         // Cari PIC yang cocok dari database
         if (!empty($senderName)) {
@@ -857,6 +879,18 @@ class LaporanMingguanService
         }
 
         return $result;
+    }
+
+    private function cleanDocumentSenderName(string $senderName): string
+    {
+        $senderName = trim($senderName);
+        $senderName = preg_replace(
+            '/^[^\pL\pN]*(?:(?:document|file|photo|video)\s+from|(?:dokumen|berkas|foto|video)\s+dari)\s+/iu',
+            '',
+            $senderName
+        );
+
+        return trim(preg_replace('/\s+/u', ' ', $senderName));
     }
 
     /**
