@@ -241,7 +241,7 @@
         </div>
 
         <!-- Main Content Wrapper -->
-        <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
+        <main class="min-w-0 flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
             <!-- Global Header Top (Search Bar) -->
             <header
                 class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-end px-6 sticky top-0 z-50 shrink-0">

@@ -5,3 +5,138 @@
 @import 'tom-select/dist/css/tom-select.css';
 
 [x-cloak] { display: none !important; }
+
+@layer components {
+    .weekly-reports-table {
+        min-width: 1200px;
+    }
+
+    .weekly-reports-table th,
+    .weekly-reports-table td {
+        vertical-align: top;
+    }
+
+    .weekly-reports-table th {
+        white-space: nowrap;
+    }
+
+    @media (max-width: 767px) {
+        .weekly-reports-table {
+            display: block;
+            min-width: 0;
+        }
+
+        .weekly-reports-table thead {
+            display: none;
+        }
+
+        .weekly-reports-table tbody {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .weekly-reports-table tbody > tr {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem 0.75rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+            box-shadow: 0 2px 6px rgb(15 23 42 / 0.04);
+        }
+
+        .weekly-reports-table td[data-label] {
+            display: block;
+            min-width: 0;
+            max-width: none;
+            padding: 0;
+            overflow: visible;
+            overflow-wrap: anywhere;
+            white-space: normal;
+            text-overflow: clip;
+            line-height: 1.6;
+        }
+
+        .weekly-reports-table td[data-label]::before {
+            content: attr(data-label);
+            display: block;
+            margin-bottom: 0.25rem;
+            color: #6b7280;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .weekly-reports-table td[data-label="Tanggal"] {
+            order: 1;
+        }
+
+        .weekly-reports-table td[data-label="Status"] {
+            order: 2;
+            text-align: right;
+        }
+
+        .weekly-reports-table td[data-label="Nama Kegiatan"] {
+            grid-column: 1 / -1;
+            order: 3;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 1rem;
+        }
+
+        .weekly-reports-table td[data-label="Lokasi"] {
+            order: 4;
+        }
+
+        .weekly-reports-table td[data-label="PIC"] {
+            order: 5;
+        }
+
+        .weekly-reports-table td[data-label="Hasil / Deskripsi"] {
+            grid-column: 1 / -1;
+            order: 6;
+        }
+
+        .weekly-reports-table td[data-label="Prioritas"] {
+            grid-column: 1 / -1;
+            order: 7;
+        }
+
+        .weekly-reports-table td[data-label="Tindak Lanjut"] {
+            grid-column: 1 / -1;
+            order: 8;
+        }
+
+        .weekly-reports-table td[data-label="Aksi"] {
+            order: 9;
+            text-align: left;
+        }
+
+        .weekly-reports-table td[data-label="Aksi"] > div {
+            justify-content: flex-start;
+        }
+
+        .weekly-reports-table td[data-label="Info"] {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            order: 10;
+        }
+
+        .weekly-reports-table td[data-label="Aksi"],
+        .weekly-reports-table td[data-label="Info"] {
+            padding-top: 0.75rem;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .weekly-reports-table td[data-label="Aksi"] button,
+        .weekly-reports-table td[data-label="Info"] button {
+            width: 2.75rem;
+            height: 2.75rem;
+        }
+
+        .weekly-reports-table td[colspan] {
+            grid-column: 1 / -1;
+        }
+    }
+}

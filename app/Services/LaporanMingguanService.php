@@ -176,7 +176,7 @@ class LaporanMingguanService
     public function parseMultipleTexts(string $text): array
     {
         // Ensure text is valid UTF-8 to avoid malformed character issues
-        $text = $this->ensureUtf8($text);
+        $text = $this->normalizeStructuredReportLabels($this->ensureUtf8($text));
         $blocks = $this->splitIntoBlocks($text);
 
         $results = [];
@@ -187,6 +187,40 @@ class LaporanMingguanService
         }
 
         return $results ?: [$this->parseText($text)];
+    }
+
+    private function normalizeStructuredReportLabels(string $text): string
+    {
+        // Samakan label sebelum memisahkan kegiatan, termasuk label dalam satu baris.
+        if (!preg_match('/\b(?:tanggal|nama\h+kegiatan)\h*[*_]{0,2}\h*:/iu', $text)) {
+            return $text;
+        }
+
+        $labels = [
+            'Tanggal' => '(?:hari\h*[,\/]?\h*)?tanggal',
+            'Nama Kegiatan' => 'nama\h+kegiatan',
+            'Lokasi' => 'lokasi|tempat',
+            'Nama Pelaksana' => '(?:nama\h+)?pelaksana|pic',
+            'Keterangan' => 'ket\.\h*(?:kegiatan)?|keterangan(?:\h+kegiatan)?',
+            'Hasil Kegiatan' => 'hasil(?:\h+kegiatan)?',
+            'Kendala' => 'kendala',
+            'Foto' => 'foto|dokumentasi',
+        ];
+        $labelPattern = implode('|', array_map(fn($label) => '(?:' . $label . ')', $labels));
+
+        return trim(preg_replace_callback(
+            '/(?<![\pL\pN])[*_]{0,2}(?<label>' . $labelPattern . ')\h*[*_]{0,2}\h*:\h*[*_]{0,2}\h*/iu',
+            function (array $match) use ($labels): string {
+                foreach ($labels as $canonical => $pattern) {
+                    if (preg_match('/^(?:' . $pattern . ')$/iu', $match['label'])) {
+                        return "\n" . $canonical . ' : ';
+                    }
+                }
+
+                return $match[0];
+            },
+            $text
+        ));
     }
 
     /**
@@ -212,6 +246,11 @@ class LaporanMingguanService
         // Strategi 0b: export Telegram berisi beberapa kiriman dokumen.
         $documentBlocks = $this->splitTelegramDocumentBlocks($text);
         if (count($documentBlocks) > 1) return $documentBlocks;
+
+        // Baris kosong dan bullet di dalam satu laporan tetap bagian dari kolomnya.
+        if (preg_match('/^(?:Tanggal|Nama Kegiatan)\h*:/im', $text)) {
+            return [$text];
+        }
 
         // Strategi 1: daftar bernomor  "1. ...", "2. ..."
         if (preg_match_all('/(?:^|\n)\s*\d+[\.)\-]\s+/m', $text, $m) && count($m[0]) > 1) {
@@ -243,15 +282,40 @@ class LaporanMingguanService
         ));
 
         $starts = [];
+        $inheritedDates = [];
+        $hasStructuredStart = false;
+        $hasActivityName = false;
+        $reportDateLine = null;
+
         foreach ($lines as $i => $line) {
-            if (preg_match('/^Tanggal\s*:/i', $line)) {
+            if (preg_match('/^Tanggal\h*:/i', $line)) {
                 $starts[] = $i;
+                $hasStructuredStart = true;
+                $hasActivityName = false;
+                $reportDateLine = $line;
+                continue;
+            }
+
+            if (preg_match('/^Nama Kegiatan\h*:/i', $line)) {
+                // Satu tanggal dapat menaungi beberapa kegiatan. Nama berikutnya
+                // selalu memulai entri baru agar kegiatan sebelumnya tidak tertimpa.
+                if (!$hasStructuredStart || $hasActivityName) {
+                    $starts[] = $i;
+                    if ($reportDateLine !== null) {
+                        $inheritedDates[$i] = $reportDateLine;
+                    }
+                }
+                $hasStructuredStart = true;
+                $hasActivityName = true;
                 continue;
             }
 
             if ($this->isDocumentFileLine($line)) {
                 $senderIndex = $this->findDocumentSenderLineIndex($lines, $i);
                 $starts[] = $senderIndex ?? $i;
+                $hasStructuredStart = false;
+                $hasActivityName = false;
+                $reportDateLine = null;
             }
         }
 
@@ -264,6 +328,9 @@ class LaporanMingguanService
         foreach ($starts as $i => $start) {
             $end = ($starts[$i + 1] ?? count($lines)) - 1;
             $blockLines = array_slice($lines, $start, $end - $start + 1);
+            if (isset($inheritedDates[$start])) {
+                array_unshift($blockLines, $inheritedDates[$start]);
+            }
             $chatDate = $this->findNearestChatDateLine($lines, $start);
             if ($chatDate !== null && !$this->isChatDateLine($blockLines[0] ?? '')) {
                 array_unshift($blockLines, $chatDate);
@@ -312,7 +379,7 @@ class LaporanMingguanService
     public function parseText(string $text): array
     {
         // Normalize encoding to UTF-8 to avoid invalid byte sequences
-        $text = $this->ensureUtf8($text);
+        $text = $this->normalizeStructuredReportLabels($this->ensureUtf8($text));
 
         $result = [
             'tanggal'                  => '',
@@ -330,7 +397,7 @@ class LaporanMingguanService
         }
 
         // Prioritas utama: format laporan terstruktur WhatsApp
-        if (preg_match('/Tanggal\s*:/i', $text)) {
+        if (preg_match('/^(?:Tanggal|Nama Kegiatan)\h*:/im', $text)) {
             return $this->parseStructuredReport($text);
         }
 
@@ -663,7 +730,7 @@ class LaporanMingguanService
 
     private function isStructuredReportLine(string $line): bool
     {
-        return (bool) preg_match('/^(Tanggal|Nama\s+Kegiatan|Lokasi|Nama\s+Pelaksana|Keterangan|Hasil\s+Kegiatan|Kendala)\s*:/i', trim($line));
+        return (bool) preg_match('/^(Tanggal|Nama\s+Kegiatan|Lokasi|Nama\s+Pelaksana|Keterangan|Hasil\s+Kegiatan|Kendala|Foto)\h*:/i', trim($line));
     }
 
     private function findDocumentSenderLineIndex(array $lines, int $fileLineIdx): ?int
@@ -916,41 +983,46 @@ class LaporanMingguanService
             'keterangan_tindak_lanjut' => ''
         ];
 
-        // Tanggal — mendukung "14 April 2026" dan "Selasa, 14 April 2026"
-        if (preg_match('/Tanggal\s*:\s*(?:[A-Za-z]+,\s*)?(\d{1,2}\s+[A-Za-z]+\s+\d{4})/i', $text, $m)) {
-            $parsed = $this->parseTanggalIndonesia(trim($m[1]));
+        // Ambil isi sampai label berikutnya, bukan sampai akhir baris.
+        // Kolom kosong tidak boleh mengambil nilai kolom setelahnya.
+        $labels = 'Tanggal|Nama Kegiatan|Lokasi|Nama Pelaksana|Keterangan|Hasil Kegiatan|Kendala|Foto';
+        preg_match_all(
+            '/^(' . $labels . ')\h*:\h*(.*?)(?=^(?:' . $labels . ')\h*:|\z)/imsu',
+            $text,
+            $matches,
+            PREG_SET_ORDER
+        );
+        $fields = [];
+        foreach ($matches as $match) {
+            $fields[strtolower($match[1])] = trim($match[2]);
+        }
+
+        if (!empty($fields['tanggal'])) {
+            $parsed = $this->parseTanggalIndonesia($fields['tanggal']);
             if ($parsed) $result['tanggal'] = $parsed;
         }
 
-        // Nama Kegiatan — ditambahkan kata kerja kontekstual jika belum ada
-        if (preg_match('/Nama\s+Kegiatan\s*:\s*(.+)/i', $text, $m)) {
-            $result['nama_kegiatan'] = $this->enrichNamaKegiatan(ucfirst(trim($m[1])));
-            // Auto-detect prioritas dari nama kegiatan
+        if (!empty($fields['nama kegiatan'])) {
+            $result['nama_kegiatan'] = $this->enrichNamaKegiatan(ucfirst($fields['nama kegiatan']));
             $result['prioritas'] = $this->detectPrioritas($result['nama_kegiatan']);
         }
 
-        // Lokasi
-        if (preg_match('/Lokasi\s*:\s*(.+)/i', $text, $m))
-            $result['lokasi'] = trim($m[1]);
+        $result['lokasi'] = $fields['lokasi'] ?? '';
+        $result['pic'] = $fields['nama pelaksana'] ?? '';
 
-        // Nama Pelaksana → PIC
-        if (preg_match('/Nama\s+Pelaksana\s*:\s*(.+)/i', $text, $m))
-            $result['pic'] = trim($m[1]);
-
-        // Hasil Kegiatan (bisa multi-baris, sampai Kendala atau akhir blok)
-        if (preg_match('/Hasil\s+Kegiatan\s*:\s*([\s\S]+?)(?=\nKendala\s*:|$)/i', $text, $m)) {
-            $hasil = $this->cleanChatNoise(trim($m[1]));
-            $result['hasil_deskripsi'] = $hasil;
-            $result['status']          = stripos($hasil, 'selesai') !== false ? 'Selesai' : 'Berjalan';
+        $hasil = $fields['hasil kegiatan'] ?? '';
+        if ($hasil === '' || $hasil === '-') {
+            $hasil = $fields['keterangan'] ?? '';
+        }
+        if ($hasil !== '' && $hasil !== '-') {
+            $result['hasil_deskripsi'] = $this->cleanChatNoise($hasil);
+            $result['status'] = stripos($hasil, 'selesai') !== false ? 'Selesai' : 'Berjalan';
         }
 
-        // Kendala → tindak_lanjut (abaikan jika nilainya "-" atau kosong)
-        if (preg_match('/Kendala\s*:\s*(.+)/i', $text, $m)) {
-            $kendala = trim($m[1]);
-            if ($kendala !== '-' && !empty($kendala)) {
-                $result['keterangan_tindak_lanjut'] = $kendala;
-                $result['status']                   = 'Tertunda';
-            }
+        $kendala = $fields['kendala'] ?? '';
+        if ($kendala !== '-' && $kendala !== '') {
+            $result['keterangan_tindak_lanjut'] = $kendala;
+            $result['status'] = 'Tertunda';
         }
 
         // Auto-generate tindak lanjut berbasis konteks jika masih kosong
@@ -1085,8 +1157,8 @@ class LaporanMingguanService
         $patterns = [
             '/(?:senin|selasa|rabu|kamis|jumat|jum\'at|sabtu|minggu),?\s*(\d{1,2}\s+[A-Za-z]+\s+\d{4})/i',
             '/(\d{1,2}\s+[A-Za-z]+\s+\d{4})/i',
-            '/(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})/',
-            '/(\d{4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})/',
+            '/\b(\d{4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})\b/',
+            '/\b(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})\b/',
         ];
 
         foreach ($patterns as $pattern) {

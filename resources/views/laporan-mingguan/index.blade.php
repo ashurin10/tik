@@ -336,7 +336,7 @@
                 this.closeDeleteModal();
             }
         }
-    }" class="p-6">
+    }" class="min-w-0 p-0 md:p-6">
 
         @if(session('success'))
             <div
@@ -351,29 +351,29 @@
             </div>
         @endif
 
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800">Laporan Mingguan</h1>
                 <p class="text-gray-500 text-sm">Kelola dan ekspor data laporan mingguan.</p>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="grid w-full grid-cols-2 gap-2 md:flex md:w-auto md:flex-wrap md:gap-3">
                 <button type="button" @click="openAiModal()"
-                    class="bg-purple-600 text-white px-4 py-2.5 rounded-xl font-bold shadow-lg shadow-purple-200 hover:bg-purple-700 transition flex items-center gap-2">
+                    class="bg-purple-600 text-white px-3 md:px-4 py-2.5 rounded-xl font-bold shadow-lg shadow-purple-200 hover:bg-purple-700 transition flex items-center gap-2 min-h-11 justify-center text-center text-xs sm:text-sm">
                     <i class="fas fa-magic"></i> Ekstrak Teks
                 </button>
                 <button type="button" @click="showExportModal = true"
-                    class="bg-white text-gray-700 px-5 py-2.5 rounded-xl font-bold border border-gray-200 shadow-sm hover:bg-gray-50 transition flex items-center gap-2">
+                    class="bg-white text-gray-700 px-3 md:px-5 py-2.5 rounded-xl font-bold border border-gray-200 shadow-sm hover:bg-gray-50 transition flex items-center gap-2 min-h-11 justify-center text-center text-xs sm:text-sm">
                     <i class="fas fa-print text-blue-600"></i> Cetak Laporan
                 </button>
                 @if(auth()->user()->isAdmin())
                 <button type="button" @click="showResetModal = true"
-                    class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl font-bold border border-red-200 hover:bg-red-100 transition flex items-center gap-2">
+                    class="bg-red-50 text-red-600 px-3 md:px-4 py-2.5 rounded-xl font-bold border border-red-200 hover:bg-red-100 transition flex items-center gap-2 min-h-11 justify-center text-center text-xs sm:text-sm">
                     <i class="fas fa-trash-alt"></i> Reset Data
                 </button>
                 @endif
                 <button @click="openCreateModal()"
-                    class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition flex items-center gap-2">
+                    class="bg-blue-600 text-white px-3 md:px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition flex items-center gap-2 min-h-11 justify-center text-center text-xs sm:text-sm">
                     <i class="fas fa-plus"></i> Tambah Data
                 </button>
             </div>
@@ -381,30 +381,30 @@
 
         <!-- Live Filter Bar -->
         <div class="bg-white rounded-2xl shadow-md shadow-gray-200/40 border border-gray-100 px-5 py-4 mb-5">
-            <div class="flex flex-wrap items-end gap-3">
+            <div class="grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap">
 
                 {{-- Filter Bulan --}}
-                <div class="flex flex-col gap-1 min-w-[130px]">
+                <div class="flex min-w-0 flex-col gap-1 lg:min-w-[130px]">
                     <label class="text-[0.7rem] font-bold text-gray-500">
                         <i class="fas fa-calendar-alt mr-1 text-blue-400"></i>Bulan
                     </label>
                     <input type="month" x-model="filterBulan"
                         @change="filterTanggal = ''"
-                        class="bg-[#f4f5f7] border-0 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 transition-all text-gray-700">
+                        class="w-full min-w-0 max-w-full bg-[#f4f5f7] border-0 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 transition-all text-gray-700">
                 </div>
 
                 {{-- Filter Tanggal Spesifik --}}
-                <div class="flex flex-col gap-1 min-w-[150px]">
+                <div class="flex min-w-0 flex-col gap-1 lg:min-w-[150px]">
                     <label class="text-[0.7rem] font-bold text-gray-500">
                         <i class="fas fa-calendar-day mr-1 text-green-400"></i>Tanggal
                     </label>
                     <input type="date" x-model="filterTanggal"
                         @change="filterBulan = ''"
-                        class="bg-[#f4f5f7] border-0 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 transition-all text-gray-700">
+                        class="w-full min-w-0 max-w-full bg-[#f4f5f7] border-0 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 transition-all text-gray-700">
                 </div>
 
                 {{-- Filter Pencarian --}}
-                <div class="flex flex-col gap-1 flex-1 min-w-[180px]">
+                <div class="flex min-w-0 flex-col gap-1 sm:col-span-2 lg:flex-1 lg:min-w-[180px]">
                     <label class="text-[0.7rem] font-bold text-gray-500">
                         <i class="fas fa-search mr-1 text-blue-400"></i>Cari
                     </label>
@@ -414,10 +414,10 @@
                 </div>
 
                 {{-- Tombol Reset Filter --}}
-                <div class="flex flex-col gap-1 justify-end">
-                    <label class="text-[0.7rem] font-bold text-transparent">-</label>
+                <div class="flex flex-col gap-1 justify-end"
+                    x-cloak x-show="filterBulan || filterTanggal || filterSearch">
+                    <span aria-hidden="true" class="hidden text-[0.7rem] text-transparent lg:block">-</span>
                     <button type="button"
-                        x-show="filterBulan || filterTanggal || filterSearch"
                         @click="resetFilter()"
                         class="shrink-0 bg-gray-100 text-gray-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-200 transition flex items-center gap-2">
                         <i class="fas fa-times text-xs"></i> Reset Filter
@@ -427,21 +427,22 @@
         </div>
 
         <!-- Table -->
-        <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+        <div class="min-w-0 md:overflow-hidden md:rounded-3xl md:bg-white md:shadow-xl md:shadow-gray-200/50">
+            <div class="min-w-0 md:overflow-x-auto">
+                <table class="weekly-reports-table w-full text-left border-collapse">
+                    <caption class="sr-only">Daftar laporan mingguan beserta hasil, pelaksana, status, dan tindakan.</caption>
                     <thead>
                         <tr class="bg-gray-50 border-b border-gray-100">
-                            <th class="p-4 font-bold text-gray-600 text-sm">Tanggal</th>
-                            <th class="p-4 font-bold text-gray-600 text-sm">Nama Kegiatan</th>
-                            <th class="p-4 font-bold text-gray-600 text-sm">Lokasi</th>
-                            <th class="p-4 font-bold text-gray-600 text-sm">Hasil / Deskripsi</th>
-                            <th class="p-4 font-bold text-gray-600 text-sm">Prioritas</th>
-                            <th class="p-4 font-bold text-gray-600 text-sm">PIC</th>
-                            <th class="p-4 font-bold text-gray-600 text-sm">Status</th>
-                            <th class="p-4 font-bold text-gray-600 text-sm">Tindak Lanjut</th>
-                            <th class="p-4 font-bold text-gray-600 text-sm text-center">Aksi</th>
-                            <th class="p-4 font-bold text-gray-600 text-sm text-center">Info</th>
+                            <th scope="col" class="p-4 font-bold text-gray-600 text-sm">Tanggal</th>
+                            <th scope="col" class="p-4 font-bold text-gray-600 text-sm">Nama Kegiatan</th>
+                            <th scope="col" class="p-4 font-bold text-gray-600 text-sm">Lokasi</th>
+                            <th scope="col" class="p-4 font-bold text-gray-600 text-sm">Hasil / Deskripsi</th>
+                            <th scope="col" class="p-4 font-bold text-gray-600 text-sm">Prioritas</th>
+                            <th scope="col" class="p-4 font-bold text-gray-600 text-sm">PIC</th>
+                            <th scope="col" class="p-4 font-bold text-gray-600 text-sm">Status</th>
+                            <th scope="col" class="p-4 font-bold text-gray-600 text-sm">Tindak Lanjut</th>
+                            <th scope="col" class="p-4 font-bold text-gray-600 text-sm text-center">Aksi</th>
+                            <th scope="col" class="p-4 font-bold text-gray-600 text-sm text-center">Info</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -473,9 +474,9 @@
                             @endphp
                             <tr id="row-{{ $row->hashid }}"
                                 x-show="matchesFilter('{{ $row->tanggal }}', '{{ addslashes($searchTarget) }}')"
-                                class="hover:bg-gray-50 transition group {{ $isDuplicate ? 'bg-amber-50 hover:bg-amber-100' : '' }}">
-                                <td class="p-4 text-sm text-gray-800 whitespace-nowrap">{{ $row->tanggal }}</td>
-                                <td class="p-4 text-sm font-bold text-gray-800">
+                                class="transition group {{ $isDuplicate ? 'bg-amber-50 hover:bg-amber-100' : 'bg-white hover:bg-gray-50' }}">
+                                <td data-label="Tanggal" class="p-4 text-sm text-gray-800 whitespace-nowrap">{{ $row->tanggal }}</td>
+                                <td data-label="Nama Kegiatan" class="p-4 text-sm font-bold text-gray-800">
                                     {{ $row->nama_kegiatan }}
                                     @if($isDuplicate)
                                         <span class="ml-1.5 inline-flex items-center gap-1 text-[0.6rem] font-bold text-amber-700 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded-md" title="Terdapat kegiatan dengan data yang sama persis (semua kolom)">
@@ -483,11 +484,11 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td class="p-4 text-sm text-gray-600">{{ $row->lokasi }}</td>
-                                <td class="p-4 text-sm text-gray-600 max-w-xs truncate" title="{{ $row->hasil_deskripsi }}">
+                                <td data-label="Lokasi" class="p-4 text-sm text-gray-600">{{ $row->lokasi }}</td>
+                                <td data-label="Hasil / Deskripsi" class="p-4 text-sm text-gray-600 max-w-xs truncate" title="{{ $row->hasil_deskripsi }}">
                                     {{ $row->hasil_deskripsi ?? '-' }}
                                 </td>
-                                <td class="p-4 text-sm text-gray-800">
+                                <td data-label="Prioritas" class="p-4 text-sm text-gray-800">
                                     @php
                                         $prioritasColor = match ($row->prioritas) {
                                             'Tinggi' => 'text-red-600 bg-red-100',
@@ -500,8 +501,8 @@
                                         {{ $row->prioritas }}
                                     </span>
                                 </td>
-                                <td class="p-4 text-sm text-gray-800">{{ $row->pic }}</td>
-                                <td class="p-4 text-sm text-gray-800">
+                                <td data-label="PIC" class="p-4 text-sm text-gray-800">{{ $row->pic }}</td>
+                                <td data-label="Status" class="p-4 text-sm text-gray-800">
                                     @php
                                         $statusClass = match ($row->status) {
                                             'Selesai' => 'bg-green-100 text-green-700',
@@ -514,26 +515,26 @@
                                         {{ $row->status }}
                                     </span>
                                 </td>
-                                <td class="p-4 text-sm text-gray-600">{{ $row->keterangan_tindak_lanjut ?? '-' }}</td>
-                                <td class="p-4 text-center">
+                                <td data-label="Tindak Lanjut" class="p-4 text-sm text-gray-600">{{ $row->keterangan_tindak_lanjut ?? '-' }}</td>
+                                <td data-label="Aksi" class="p-4 text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <button @click='openEditModal(@json($row))'
                                             class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors border border-blue-100/50 shadow-sm flex items-center justify-center"
-                                            title="Edit Laporan">
+                                            aria-label="Edit laporan {{ $row->nama_kegiatan }}" title="Edit Laporan">
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
                                         <button @click="openDeleteModal('{{ $row->hashid }}')"
                                             class="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors border border-red-100/50 shadow-sm flex items-center justify-center"
-                                            title="Hapus Laporan">
+                                            aria-label="Hapus laporan {{ $row->nama_kegiatan }}" title="Hapus Laporan">
                                             <i class="fas fa-trash-alt text-xs"></i>
                                         </button>
                                     </div>
                                 </td>
-                                <td class="p-4 text-center">
+                                <td data-label="Info" class="p-4 text-center">
                                     <button type="button"
                                         @click='openAuditInfo(@json($auditInfo))'
                                         class="w-8 h-8 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-700 hover:text-white transition-colors border border-slate-100/70 shadow-sm flex items-center justify-center"
-                                        title="Info input dan update">
+                                        aria-label="Info input dan update laporan {{ $row->nama_kegiatan }}" title="Info input dan update">
                                         <i class="fas fa-info text-xs"></i>
                                     </button>
                                 </td>
