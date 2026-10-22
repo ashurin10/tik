@@ -12,15 +12,10 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AsetTikController;
 
-use App\Http\Controllers\DatabaseBackupController;
-
 Route::get('/dashboard', [ServiceController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 Route::get('/portal', [ServiceController::class, 'index'])->middleware(['auth', 'verified'])->name('portal');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/database-backup', [DatabaseBackupController::class, 'index'])->name('database-backup.index');
-    Route::post('/database-backup', [DatabaseBackupController::class, 'store'])->name('database-backup.store');
-
     Route::prefix('laporan-mingguan')->name('laporan-mingguan.')->group(function () {
         Route::get('/dashboard', [LaporanMingguanController::class, 'dashboard'])->name('dashboard');
         Route::get('/export', [LaporanMingguanController::class, 'export'])->name('export');

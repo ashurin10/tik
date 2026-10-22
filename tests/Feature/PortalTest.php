@@ -69,7 +69,7 @@ class PortalTest extends TestCase
             ->assertSee(route('urls.index'), false)
             ->assertDontSee(route('users.index'), false)
             ->assertDontSee(route('menus.index'), false)
-            ->assertDontSee(route('database-backup.index'), false)
+            ->assertDontSee(url('/database-backup'), false)
             ->assertDontSee('href="http://localhost/aset"', false);
 
         $this->actingAs($admin)
@@ -91,7 +91,7 @@ class PortalTest extends TestCase
             ->assertOk()
             ->assertSee('Manajemen Pengguna')
             ->assertSee('Manajemen Menu')
-            ->assertSee('Backup Database')
+            ->assertDontSee('Backup Database')
             ->assertSee(route('dashboard'), false)
             ->assertDontSee('URL Shortener')
             ->assertDontSee('Data Laporan');
@@ -144,7 +144,7 @@ class PortalTest extends TestCase
             ->assertOk()
             ->assertSee('Manajemen Pengguna')
             ->assertSee('Manajemen Menu')
-            ->assertSee('Backup Database')
+            ->assertDontSee('Backup Database')
             ->assertDontSee('URL Shortener')
             ->assertDontSee('Data Laporan');
     }

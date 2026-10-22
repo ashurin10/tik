@@ -68,6 +68,12 @@
                 if (!Array.isArray(data)) {
                     throw new Error('Format hasil ekstraksi tidak valid.');
                 }
+                if (data.length === 0) {
+                    this.parsedResults = [];
+                    this.selectedResults = [];
+                    alert('Tidak ditemukan laporan kegiatan. Tambahkan isi atau keterangan kegiatan pada teks yang diekstrak.');
+                    return;
+                }
                 this.parsedResults = data;
                 this.selectedResults = data.map((_, i) => i);
                 this.aiStep = 'review';

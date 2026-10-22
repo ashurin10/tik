@@ -81,7 +81,7 @@ class AppServiceProvider extends ServiceProvider
             return null;
         }
 
-        foreach (['users.', 'menus.', 'database-backup.'] as $prefix) {
+        foreach (['users.', 'menus.'] as $prefix) {
             if (str_starts_with($routeName, $prefix)) {
                 return 'admin-portal';
             }
@@ -99,7 +99,7 @@ class AppServiceProvider extends ServiceProvider
     private function menuMatchesPrefix($menu, string $prefix): bool
     {
         if ($prefix === 'admin-portal') {
-            return is_string($menu->url) && collect(['users.', 'menus.', 'database-backup.'])
+            return is_string($menu->url) && collect(['users.', 'menus.'])
                 ->contains(fn(string $adminPrefix) => str_starts_with($menu->url, $adminPrefix));
         }
 

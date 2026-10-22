@@ -176,17 +176,62 @@ class LaporanMingguanService
     public function parseMultipleTexts(string $text): array
     {
         // Ensure text is valid UTF-8 to avoid malformed character issues
-        $text = $this->normalizeStructuredReportLabels($this->ensureUtf8($text));
+        $text = $this->normalizeStructuredReportLabels(
+            $this->removeTelegramMediaSenders($this->ensureUtf8($text))
+        );
         $blocks = $this->splitIntoBlocks($text);
 
         $results = [];
         foreach ($blocks as $block) {
             $block = trim($block);
-            if (strlen($block) < 5) continue;
+            if (!$this->hasReportContent($block)) continue;
             $results[] = $this->parseText($block);
         }
 
-        return $results ?: [$this->parseText($text)];
+        return $results;
+    }
+
+    private function hasReportContent(string $text): bool
+    {
+        return $this->isDocumentMessage($text)
+            || preg_match('/[\pL\pN]/u', $this->cleanChatNoise($text)) === 1;
+    }
+
+    private function removeTelegramMediaSenders(string $text): string
+    {
+        $lines = preg_split('/\R/', $text);
+        $senderIndexes = [];
+
+        foreach ($lines as $index => $line) {
+            if (!preg_match('/^(Photo|Video|Audio|Sticker|GIF)$/i', trim($line))) {
+                continue;
+            }
+
+            $senderIndex = $index - 1;
+            while ($senderIndex >= 0 && $this->isDocumentExportNoiseLine($lines[$senderIndex])) {
+                $senderIndex--;
+            }
+
+            $sender = trim($lines[$senderIndex] ?? '');
+            $beforeSender = $senderIndex - 1;
+            while ($beforeSender >= 0 && trim($lines[$beforeSender]) === '') {
+                $beforeSender--;
+            }
+
+            $header = trim($lines[$beforeSender] ?? '');
+            // Hanya hapus nama dalam header tanggal/jam pesan. Isi laporan
+            // atau caption tanpa header Telegram harus tetap dipertahankan.
+            if (preg_match('/^[\pL][\pL\pM\pN ._\x{0027}()-]{0,99}$/u', $sender)
+                && ($this->isChatDateLine($header) || preg_match('/^\d{1,2}:\d{2}$/', $header))) {
+                $senderIndexes[$senderIndex] = true;
+            }
+        }
+
+        return implode("\n", array_filter(
+            $lines,
+            fn($_line, $index) => !isset($senderIndexes[$index]),
+            ARRAY_FILTER_USE_BOTH
+        ));
     }
 
     private function normalizeStructuredReportLabels(string $text): string
@@ -379,7 +424,9 @@ class LaporanMingguanService
     public function parseText(string $text): array
     {
         // Normalize encoding to UTF-8 to avoid invalid byte sequences
-        $text = $this->normalizeStructuredReportLabels($this->ensureUtf8($text));
+        $text = $this->normalizeStructuredReportLabels(
+            $this->removeTelegramMediaSenders($this->ensureUtf8($text))
+        );
 
         $result = [
             'tanggal'                  => '',
@@ -392,7 +439,7 @@ class LaporanMingguanService
             'keterangan_tindak_lanjut' => ''
         ];
 
-        if (empty(trim($text))) {
+        if (!$this->hasReportContent($text)) {
             return $result;
         }
 
@@ -424,6 +471,9 @@ class LaporanMingguanService
         }
 
         if (empty($result['tanggal'])) $result['tanggal'] = date('Y-m-d');
+
+        // Tanggal chat dipakai sebagai konteks, bukan sebagai nama kegiatan.
+        $text = $this->cleanChatNoise($text);
 
         if (preg_match('/\b(selesai|berjalan|tertunda)\b/i', $text, $matches))
             $result['status'] = ucfirst(strtolower($matches[1]));
@@ -994,7 +1044,10 @@ class LaporanMingguanService
         );
         $fields = [];
         foreach ($matches as $match) {
-            $fields[strtolower($match[1])] = trim($match[2]);
+            $label = strtolower($match[1]);
+            $fields[$label] = $label === 'tanggal'
+                ? trim($match[2])
+                : $this->cleanChatNoise($match[2]);
         }
 
         if (!empty($fields['tanggal'])) {
@@ -1194,6 +1247,9 @@ class LaporanMingguanService
         $clean = array_filter($lines, function (string $line): bool {
             $l = trim($line);
             if ($l === '') return false;
+
+            if ($this->isChatDateLine($l)) return false;
+            if (preg_match('/^[-\x{2013}\x{2014}]+$/u', $l)) return false;
 
             // Jam pesan: "08:49", "17:11"
             if (preg_match('/^\d{1,2}:\d{2}$/', $l)) return false;

@@ -119,7 +119,6 @@ class ServiceController extends Controller
         return in_array($service->url, [
             'users.index',
             'menus.index',
-            'database-backup.index',
         ], true);
     }
 

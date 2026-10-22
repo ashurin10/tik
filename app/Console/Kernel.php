@@ -3,7 +3,6 @@
 namespace App\Console;
 
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Console\Commands\BackupDatabase;
 use App\Console\Commands\CheckSN;
 
 class Kernel extends ConsoleKernel
@@ -14,7 +13,6 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        BackupDatabase::class,
         CheckSN::class,
     ];
 
@@ -23,7 +21,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(\Illuminate\Console\Scheduling\Schedule $schedule): void
     {
-        // $schedule->command('backup:database')->daily();
+        //
     }
 
     /**
