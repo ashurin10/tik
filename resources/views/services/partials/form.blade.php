@@ -72,11 +72,11 @@
 
         <div>
             <label class="block text-xs font-bold text-gray-500 mb-1.5">Gambar</label>
-            <input type="file" name="image" accept="image/*"
+            <input type="file" name="image" accept=".jpg,.jpeg,.png,.gif,.webp"
                 class="w-full bg-gray-50 border-gray-200 rounded-lg px-3 py-2 text-sm file:mr-3 file:px-3 file:py-1 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-600 file:font-bold">
             @if($isEdit)
                 <label class="mt-2 inline-flex items-center gap-2 text-xs font-medium text-gray-500">
-                    <input type="checkbox" name="remove_image" value="1" class="rounded border-gray-300 text-blue-600">
+                    <input type="checkbox" name="remove_image" value="1" class="rounded-sm border-gray-300 text-blue-600">
                     Hapus gambar saat ini
                 </label>
             @endif

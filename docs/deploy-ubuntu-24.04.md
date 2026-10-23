@@ -1,5 +1,7 @@
 Pemasangan TIK pada Ubuntu 24.04
 
+**Pembaruan keamanan 23 Oktober 2026:** sebelum membuka layanan, ikuti [panduan PHP2Shell](update-keamanan-php2shell.md). PHP 8.3 dari Ubuntu 24.04 harus memakai paket resmi `8.3.6-0ubuntu0.24.04.13` atau lebih baru, atau PHP upstream 8.3.36 atau lebih baru. Memasang nama paket `php8.3-fpm` saja belum membuktikan tambalan aktif. Restart dan verifikasi worker FPM. Untuk server yang sudah berisi data, gunakan bagian pembaruan pada panduan tersebut.
+
 Panduan ini memasang kode proyek saat ini pada `/var/www/tik`, menggunakan Nginx, PHP 8.3 FPM, dan database SQLite baru. Paket sudah menyertakan hasil build tampilan dan perubahan penghapusan fitur Backup Database.
 
 Ganti `IP_SERVER`, `USER_SSH`, dan `tik.example.com` dengan alamat server, username SSH, dan domain Anda. Jalankan perintah Linux di terminal SSH server, kecuali langkah unggah yang dijalankan di PowerShell komputer Windows.
@@ -34,13 +36,13 @@ Gunakan folder kosong untuk pemasangan baru ini. Jika berisi aplikasi atau data 
 Jalankan pada PowerShell komputer Windows. Ganti `USER_SSH@IP_SERVER` dengan akses SSH Anda.
 
 ```powershell
-scp "D:\app\tik\storage\app\private\deploy\tik-release-20261021.tar.gz" USER_SSH@IP_SERVER:/tmp/
+scp "D:\app\tik\storage\app\private\deploy\tik-security-20261023.tar.gz" USER_SSH@IP_SERVER:/tmp/
 ```
 
 Kembali ke terminal server, lalu ekstrak:
 
 ```bash
-tar -xzf /tmp/tik-release-20261021.tar.gz -C /var/www/tik
+tar -xzf /tmp/tik-security-20261023.tar.gz -C /var/www/tik
 cd /var/www/tik
 ls -l artisan composer.json public/build/manifest.json
 ```

@@ -6,15 +6,15 @@
                 <p class="text-gray-500 text-sm">Create and manage dynamic sidebar menus.</p>
             </div>
             <button type="button" @click="showCreateModal = true"
-                class="bg-gradient-to-tl from-blue-600 to-indigo-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all transform hover:-translate-y-0.5">
+                class="bg-linear-to-tl from-blue-600 to-indigo-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all transform hover:-translate-y-0.5">
                 <i class="fas fa-plus mr-2"></i> Add New Menu
             </button>
         </div>
 
         @if (session('status'))
-            <div class="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-sm">
+            <div class="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-xs">
                 <div class="flex">
-                    <div class="flex-shrink-0">
+                    <div class="shrink-0">
                         <i class="fas fa-check-circle text-green-400"></i>
                     </div>
                     <div class="ml-3">
@@ -44,7 +44,7 @@
                             <tr class="hover:bg-gray-50/50 transition-colors">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tl from-blue-500 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-200">
+                                        <div class="w-10 h-10 rounded-xl bg-linear-to-tl from-blue-500 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-200">
                                             <i class="{{ $menu->icon ?? 'fas fa-bars' }} text-sm"></i>
                                         </div>
                                         <span class="font-bold text-gray-800">{{ $menu->name }}</span>
@@ -104,7 +104,7 @@
                                 <tr class="hover:bg-gray-50/50 transition-colors bg-gray-50/30">
                                     <td class="px-6 py-4 pl-12">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-gray-400 border border-gray-200 shadow-sm">
+                                            <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-gray-400 border border-gray-200 shadow-xs">
                                                 <i class="{{ $child->icon ?? 'fas fa-circle' }} text-xs"></i>
                                             </div>
                                             <span class="font-medium text-gray-600">{{ $child->name }}</span>
@@ -166,12 +166,12 @@
         </div>
 
         <!-- Create Modal -->
-        <div x-show="showCreateModal" style="display: none;" 
-            class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm" 
+        <div x-show="showCreateModal" style="display: none;"
+            class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs"
             x-transition x-cloak>
             <div @click.away="showCreateModal = false"
-                class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-sm z-10">
+                class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-xs z-10">
                     <div>
                         <p class="text-[0.65rem] font-bold text-gray-400 tracking-[0.2em] uppercase mb-1">PENGISIAN DATA BARU</p>
                         <h3 class="text-xl font-bold text-[#111827]">Create New Menu</h3>
@@ -219,12 +219,12 @@
                         <div class="flex gap-6 mt-2 bg-[#f4f5f7] rounded-xl px-4 py-3">
                             <label class="inline-flex items-center cursor-pointer">
                                 <input type="checkbox" name="roles[]" value="admin"
-                                    class="text-blue-600 border-gray-300 rounded shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    class="text-blue-600 border-gray-300 rounded-sm shadow-xs focus:border-blue-300 focus:ring-3 focus:ring-blue-200/50">
                                 <span class="ml-2 text-sm text-gray-600 font-medium">Admin</span>
                             </label>
                             <label class="inline-flex items-center cursor-pointer">
                                 <input type="checkbox" name="roles[]" value="user"
-                                    class="text-blue-600 border-gray-300 rounded shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    class="text-blue-600 border-gray-300 rounded-sm shadow-xs focus:border-blue-300 focus:ring-3 focus:ring-blue-200/50">
                                 <span class="ml-2 text-sm text-gray-600 font-medium">User</span>
                             </label>
                         </div>
@@ -245,13 +245,13 @@
         </div>
 
     <!-- Edit Modal -->
-    <div x-show="showEditModal" style="display: none;" 
-        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm" 
+    <div x-show="showEditModal" style="display: none;"
+        class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs"
         x-transition x-cloak>
         <div @click.away="showEditModal = false"
-            class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            
-            <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-sm z-10">
+            class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+
+            <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-xs z-10">
                 <div>
                     <p class="text-[0.65rem] font-bold text-gray-400 tracking-[0.2em] uppercase mb-1">EDIT DATA</p>
                     <h3 class="text-xl font-bold text-[#111827]">Edit Menu</h3>
@@ -300,12 +300,12 @@
                     <div class="flex gap-6 mt-2 bg-[#f4f5f7] rounded-xl px-4 py-3">
                         <label class="inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="roles[]" value="admin" id="edit_role_admin"
-                                class="text-blue-600 border-gray-300 rounded shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                class="text-blue-600 border-gray-300 rounded-sm shadow-xs focus:border-blue-300 focus:ring-3 focus:ring-blue-200/50">
                             <span class="ml-2 text-sm text-gray-600 font-medium">Admin</span>
                         </label>
                         <label class="inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="roles[]" value="user" id="edit_role_user"
-                                class="text-blue-600 border-gray-300 rounded shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                class="text-blue-600 border-gray-300 rounded-sm shadow-xs focus:border-blue-300 focus:ring-3 focus:ring-blue-200/50">
                             <span class="ml-2 text-sm text-gray-600 font-medium">User</span>
                         </label>
                     </div>

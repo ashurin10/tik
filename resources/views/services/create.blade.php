@@ -10,7 +10,7 @@
             </a>
         </div>
 
-        <div class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 overflow-hidden">
+        <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 overflow-hidden">
             <form method="POST" action="{{ route('services.store') }}" enctype="multipart/form-data" class="p-8 space-y-5">
                 @csrf
 

@@ -9,7 +9,7 @@
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900">{{ $page['title'] }}</h1>
                 <p class="text-sm text-gray-500 mt-2 max-w-3xl">{{ $page['description'] }}</p>
             </div>
-            <div class="w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-blue-600">
+            <div class="w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-xs flex items-center justify-center text-blue-600">
                 <i class="{{ $page['icon'] }} text-xl"></i>
             </div>
         </div>
@@ -29,7 +29,7 @@
         @if($pageKey === 'dashboard')
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
                 @foreach($summaryCards as $card)
-                    <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+                    <div class="bg-white border border-gray-100 rounded-2xl shadow-xs p-5">
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <p class="text-xs font-bold uppercase text-gray-400">{{ $card['label'] }}</p>
@@ -44,14 +44,14 @@
             </div>
 
             <div class="grid lg:grid-cols-3 gap-4">
-                <div class="lg:col-span-2 bg-white border border-gray-100 rounded-2xl shadow-sm p-6 min-h-72">
+                <div class="lg:col-span-2 bg-white border border-gray-100 rounded-2xl shadow-xs p-6 min-h-72">
                     <h2 class="font-bold text-gray-900 mb-1">Grafik Aset Bulanan</h2>
                     <p class="text-sm text-gray-500 mb-6">Area ini disiapkan untuk grafik aset masuk dan aset keluar bulanan.</p>
                     <div class="h-44 rounded-xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
                         Data aset belum tersedia
                     </div>
                 </div>
-                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 min-h-72">
+                <div class="bg-white border border-gray-100 rounded-2xl shadow-xs p-6 min-h-72">
                     <h2 class="font-bold text-gray-900 mb-1">Kategori Aset</h2>
                     <p class="text-sm text-gray-500 mb-6">Ringkasan aset per kategori akan tampil di sini.</p>
                     <div class="space-y-3">
@@ -81,7 +81,7 @@
                 $type = $pageKey;
             @endphp
 
-            <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6">
+            <div class="bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden mb-6">
                 <div class="px-6 py-5 border-b border-gray-100">
                     <h2 class="font-bold text-gray-900">Tambah {{ $page['title'] }}</h2>
                 </div>
@@ -106,7 +106,7 @@
                 </form>
             </div>
 
-            <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div class="bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden">
                 <div class="px-6 py-5 border-b border-gray-100">
                     <h2 class="font-bold text-gray-900">Daftar {{ $page['title'] }}</h2>
                 </div>
@@ -162,14 +162,14 @@
                 <div class="px-6 py-4 border-t border-gray-100">{{ $masterItems->links() }}</div>
             </div>
         @elseif($pageKey === 'data-aset')
-            <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6">
+            <div class="bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden mb-6">
                 <div class="px-6 py-5 border-b border-gray-100">
                     <h2 class="font-bold text-gray-900">Tambah Data Aset TIK</h2>
                 </div>
                 @include('aset-tik.partials.aset-form', ['action' => route('aset-tik.data-aset.store'), 'method' => 'POST'])
             </div>
 
-            <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div class="bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden">
                 <div class="px-6 py-5 border-b border-gray-100">
                     <h2 class="font-bold text-gray-900">Daftar Data Aset TIK</h2>
                 </div>
@@ -232,14 +232,14 @@
                 <div class="px-6 py-4 border-t border-gray-100">{{ $asets->links() }}</div>
             </div>
         @elseif($transactionConfig)
-            <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6">
+            <div class="bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden mb-6">
                 <div class="px-6 py-5 border-b border-gray-100">
                     <h2 class="font-bold text-gray-900">Catat {{ $page['title'] }}</h2>
                 </div>
                 @include('aset-tik.partials.transaction-form')
             </div>
 
-            <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div class="bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden">
                 <div class="px-6 py-5 border-b border-gray-100">
                     <h2 class="font-bold text-gray-900">Daftar {{ $page['title'] }}</h2>
                 </div>
@@ -292,7 +292,7 @@
                 <div class="px-6 py-4 border-t border-gray-100">{{ $transactions->links() }}</div>
             </div>
         @elseif($pageKey === 'riwayat')
-            <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div class="bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden">
                 <div class="px-6 py-5 border-b border-gray-100">
                     <h2 class="font-bold text-gray-900">Riwayat Aktivitas Aset</h2>
                 </div>
@@ -331,7 +331,7 @@
             </div>
         @elseif($pageKey === 'qr-tracking')
             <div class="grid lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-1 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                <div class="lg:col-span-1 bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden">
                     <div class="px-6 py-5 border-b border-gray-100">
                         <h2 class="font-bold text-gray-900">Scan / Cari Aset</h2>
                         <p class="text-sm text-gray-500 mt-1">Masukkan kode tracking, kode aset, atau serial number.</p>
@@ -348,7 +348,7 @@
                     </form>
                 </div>
 
-                <div class="lg:col-span-2 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                <div class="lg:col-span-2 bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden">
                     <div class="px-6 py-5 border-b border-gray-100">
                         <h2 class="font-bold text-gray-900">Hasil Tracking</h2>
                     </div>
@@ -418,7 +418,7 @@
                 </div>
             </div>
         @elseif($reportType)
-            <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6">
+            <div class="bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden mb-6">
                 <form method="GET" class="p-6 grid md:grid-cols-2 xl:grid-cols-5 gap-4">
                     @if(in_array($reportType, ['laporan-aset-masuk', 'laporan-aset-keluar'], true))
                         <div>
@@ -476,7 +476,7 @@
                 </form>
             </div>
 
-            <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div class="bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden">
                 <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
                     <h2 class="font-bold text-gray-900">Data {{ $page['title'] }}</h2>
                     <span class="text-xs font-bold text-gray-500 bg-gray-100 rounded-full px-3 py-1">{{ $reportRows->total() }} data</span>
@@ -550,14 +550,14 @@
                 <div class="px-6 py-4 border-t border-gray-100">{{ $reportRows->links() }}</div>
             </div>
         @else
-            <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div class="bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden">
                 <div class="px-6 py-5 border-b border-gray-100">
                     <h2 class="font-bold text-gray-900">Ruang Kerja {{ $page['title'] }}</h2>
                     <p class="text-sm text-gray-500 mt-1">Kerangka menu sudah aktif. Form, tabel, filter, dan proses data dapat ditambahkan pada halaman ini.</p>
                 </div>
                 <div class="p-8">
                     <div class="rounded-xl border border-dashed border-gray-200 bg-gray-50 min-h-64 flex flex-col items-center justify-center text-center px-4">
-                        <div class="w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-blue-600 mb-4">
+                        <div class="w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-xs flex items-center justify-center text-blue-600 mb-4">
                             <i class="{{ $page['icon'] }} text-xl"></i>
                         </div>
                         <p class="font-bold text-gray-900">{{ $page['title'] }}</p>

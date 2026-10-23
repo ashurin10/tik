@@ -17,7 +17,7 @@
         <header class="bg-white border-b border-gray-100">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
                 <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                    <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
                         <i class="fas fa-th-large"></i>
                     </div>
                     <div class="min-w-0">
@@ -63,7 +63,7 @@
                 <section>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         @foreach($services as $service)
-                            <article class="relative group bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition overflow-hidden">
+                            <article class="relative group bg-white border border-gray-200 rounded-lg shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition overflow-hidden">
                                 @if($canManagePortal)
                                     <div class="absolute right-3 top-3 z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition">
                                         <button type="button"
@@ -77,14 +77,14 @@
                                                 order: '{{ $service->order }}',
                                                 has_image: {{ $service->image ? 'true' : 'false' }}
                                             }"
-                                            class="w-8 h-8 rounded-md bg-white border border-gray-200 text-gray-500 hover:text-blue-600 shadow-sm transition">
+                                            class="w-8 h-8 rounded-md bg-white border border-gray-200 text-gray-500 hover:text-blue-600 shadow-xs transition">
                                             <i class="fas fa-pen text-xs"></i>
                                         </button>
                                         <form method="POST" action="{{ route('services.destroy', $service) }}" onsubmit="return confirm('Hapus aplikasi ini dari portal?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                class="w-8 h-8 rounded-md bg-white border border-gray-200 text-gray-500 hover:text-red-600 shadow-sm transition">
+                                                class="w-8 h-8 rounded-md bg-white border border-gray-200 text-gray-500 hover:text-red-600 shadow-xs transition">
                                                 <i class="fas fa-trash text-xs"></i>
                                             </button>
                                         </form>
@@ -92,7 +92,7 @@
                                 @endif
 
                                 <a href="{{ $resolvePortalUrl($service) }}"
-                                    class="min-h-[9.5rem] px-6 py-7 flex flex-col items-center justify-center text-center"
+                                    class="min-h-38 px-6 py-7 flex flex-col items-center justify-center text-center"
                                     @if($service->url && str_starts_with($service->url, 'http')) target="_blank" rel="noopener noreferrer" @endif>
                                     <div class="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 mb-5 overflow-hidden">
                                         @if($service->image)
@@ -110,7 +110,7 @@
 
                         @if($canManagePortal)
                             <button type="button" @click="showCreate = true"
-                                class="min-h-[9.5rem] px-6 py-7 rounded-lg border border-dashed border-gray-300 bg-white text-center hover:border-blue-300 hover:bg-blue-50/30 transition">
+                                class="min-h-38 px-6 py-7 rounded-lg border border-dashed border-gray-300 bg-white text-center hover:border-blue-300 hover:bg-blue-50/30 transition">
                                 <span class="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 mx-auto mb-5">
                                     <i class="fas fa-plus text-xl"></i>
                                 </span>
@@ -121,7 +121,7 @@
                     </div>
                 </section>
             @else
-                <div class="bg-white border border-gray-100 rounded-lg p-10 text-center shadow-sm">
+                <div class="bg-white border border-gray-100 rounded-lg p-10 text-center shadow-xs">
                     <div class="w-14 h-14 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-th-large text-xl"></i>
                     </div>

@@ -42,7 +42,7 @@ class ServiceController extends Controller
             'icon_class' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'order' => 'nullable|integer|min:0|max:9999',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|extensions:jpg,jpeg,png,gif,webp|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
@@ -67,7 +67,7 @@ class ServiceController extends Controller
             'icon_class' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'order' => 'nullable|integer|min:0|max:9999',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|extensions:jpg,jpeg,png,gif,webp|max:2048',
             'remove_image' => ['nullable', Rule::in(['1'])],
         ]);
 

@@ -5,6 +5,12 @@
 
     RewriteEngine On
 
+    # Only Laravel's front controller may execute PHP in the public directory.
+    RewriteRule ^(?!index\.php$).*\.(?:php[0-9]*|phtml|pht|phar)(?:[./]|$) - [F,L,NC]
+
+    # Keep hidden configuration files out of the document root response.
+    RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

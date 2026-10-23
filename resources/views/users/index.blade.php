@@ -6,15 +6,15 @@
                 <p class="text-gray-500 text-sm">Kelola pengguna dan hak akses aplikasi.</p>
             </div>
             <button type="button" @click="showCreateModal = true"
-                class="bg-gradient-to-tl from-blue-600 to-indigo-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all transform hover:-translate-y-0.5 inline-flex items-center">
+                class="bg-linear-to-tl from-blue-600 to-indigo-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all transform hover:-translate-y-0.5 inline-flex items-center">
                 <i class="fas fa-plus mr-2"></i> Tambah User
             </button>
         </div>
 
         @if(session('status'))
-            <div class="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-sm">
+            <div class="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-xs">
                 <div class="flex">
-                    <div class="flex-shrink-0">
+                    <div class="shrink-0">
                         <i class="fas fa-check-circle text-green-400"></i>
                     </div>
                     <div class="ml-3">
@@ -25,9 +25,9 @@
         @endif
 
         @if($errors->any())
-            <div class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm">
+            <div class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-xs">
                 <div class="flex">
-                    <div class="flex-shrink-0">
+                    <div class="shrink-0">
                         <i class="fas fa-exclamation-circle text-red-400"></i>
                     </div>
                     <div class="ml-3">
@@ -61,7 +61,7 @@
                             <tr class="hover:bg-gray-50/50 transition-colors">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tl from-blue-500 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-200">
+                                        <div class="w-10 h-10 rounded-xl bg-linear-to-tl from-blue-500 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-200">
                                             <span class="font-bold">{{ substr($user->name, 0, 1) }}</span>
                                         </div>
                                         <span class="font-bold text-gray-800">{{ $user->name }}</span>
@@ -103,7 +103,7 @@
                                                 document.getElementById('edit_email').value = btn.dataset.userEmail || '';
                                                 document.getElementById('edit_peran').value = btn.dataset.userPeran || 'user';
                                                 document.getElementById('edit_aktif').value = btn.dataset.userAktif || '1';
-                                                
+
                                                 const lockContainer = document.getElementById('lock_container');
                                                 if(btn.dataset.userLocked === '1') {
                                                     lockContainer.style.display = 'block';
@@ -146,14 +146,14 @@
         </div>
 
     <!-- Create Modal -->
-    <div x-show="showCreateModal" style="display: none;" 
-        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm" 
+    <div x-show="showCreateModal" style="display: none;"
+        class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs"
         x-transition x-cloak
         @click.self="showCreateModal = false">
         <div
-            class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            
-            <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-sm z-10">
+            class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+
+            <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-xs z-10">
                 <div>
                     <p class="text-[0.65rem] font-bold text-gray-400 tracking-[0.2em] uppercase mb-1">PENGISIAN DATA BARU</p>
                     <h3 class="text-xl font-bold text-[#111827]">Tambah User Baru</h3>
@@ -225,14 +225,14 @@
     </div>
 
     <!-- Edit Modal -->
-    <div x-show="showEditModal" style="display: none;" 
-        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm" 
+    <div x-show="showEditModal" style="display: none;"
+        class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs"
         x-transition x-cloak
         @click.self="showEditModal = false">
         <div
-            class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            
-            <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-sm z-10">
+            class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+
+            <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-xs z-10">
                 <div>
                     <p class="text-[0.65rem] font-bold text-gray-400 tracking-[0.2em] uppercase mb-1">EDIT DATA</p>
                     <h3 class="text-xl font-bold text-[#111827]">Edit User</h3>
@@ -280,7 +280,7 @@
                 <div id="lock_container" style="display: none;" class="p-4 bg-orange-50 border border-orange-200 rounded-xl">
                     <div class="flex items-start gap-3">
                         <div class="flex h-6 items-center">
-                            <input id="unlock_account" name="unlock_account" value="1" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-600">
+                            <input id="unlock_account" name="unlock_account" value="1" type="checkbox" class="h-4 w-4 rounded-sm border-gray-300 text-orange-600 focus:ring-orange-600">
                         </div>
                         <div class="text-sm leading-6">
                             <label for="unlock_account" class="font-bold text-orange-900">Buka Kunci Akun</label>
@@ -290,7 +290,7 @@
                 </div>
 
                 <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100/50">
-                    <p class="text-[0.65rem] font-bold text-blue-400 tracking-[0.1em] uppercase mb-3">Ganti Password (Opsional)</p>
+                    <p class="text-[0.65rem] font-bold text-blue-400 tracking-widest uppercase mb-3">Ganti Password (Opsional)</p>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[0.7rem] font-medium text-gray-500 mb-1.5 ml-1 font-bold">Password Baru</label>

@@ -5,7 +5,7 @@
 
     <!-- Toast Notification (Fixed Top-Right) -->
     @if (session('status'))
-        <div id="toast-notification" class="fixed top-5 right-5 z-[9999] animate-bounce"
+        <div id="toast-notification" class="fixed top-5 right-5 z-9999 animate-bounce"
             style="position: fixed; top: 20px; right: 20px;">
             <div class="bg-white border-l-4 border-[#2563EB] shadow-2xl p-4 rounded-r-md flex items-center gap-3 pr-6">
                 <i class="fas fa-check-circle text-[#2563EB] text-xl"></i>
@@ -88,7 +88,7 @@
                             <label for="email"
                                 class="block text-sm font-medium leading-6 text-gray-900 mb-1">Email</label>
                             <input id="email" name="email" type="email" autocomplete="email" required
-                                class="block w-full rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[#2563EB] sm:text-sm sm:leading-6"
+                                class="block w-full rounded-md border-0 py-2.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[#2563EB] sm:text-sm sm:leading-6"
                                 placeholder="Lebetkeun email" value="{{ old('email') }}">
                         </div>
 
@@ -98,7 +98,7 @@
                                 class="block text-sm font-medium leading-6 text-gray-900 mb-1">Password</label>
                             <input id="password" name="password" type="password" autocomplete="current-password"
                                 required
-                                class="block w-full rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[#2563EB] sm:text-sm sm:leading-6"
+                                class="block w-full rounded-md border-0 py-2.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[#2563EB] sm:text-sm sm:leading-6"
                                 placeholder="********">
                         </div>
                         <div class="space-y-4">
@@ -122,7 +122,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
                     <input id="remember-me" name="remember" type="checkbox"
-                        class="h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]">
+                        class="h-4 w-4 rounded-sm border-gray-300 text-[#2563EB] focus:ring-[#2563EB]">
                     <label for="remember-me" class="ml-2 block text-sm text-gray-700">Émutan dugi ka 30
                         dinten</label>
                 </div>
@@ -130,7 +130,7 @@
 
             <div class="space-y-3">
                 <button type="submit"
-                    class="flex w-full justify-center rounded-md bg-[#2563EB] px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-[#1D4ED8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] transition-all duration-200">
+                    class="flex w-full justify-center rounded-md bg-[#2563EB] px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-xs hover:bg-[#1D4ED8] focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] transition-all duration-200">
                     Hayu lebet
                 </button>
 
@@ -144,7 +144,7 @@
     </div>
     <!-- Generic Error Modal (Email, Password, Verification) -->
     @if ($errors->any())
-        <div id="errorModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm"
+        <div id="errorModal" class="fixed inset-0 z-100 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs"
             role="dialog" aria-modal="true">
             <div class="relative w-full max-w-md p-4 animate-float">
                 <div class="bg-white rounded-3xl shadow-2xl overflow-hidden p-8 text-center relative">
@@ -182,7 +182,7 @@
     <!-- Inactive Account Modal -->
     @if (session('account_inactive'))
         <div id="inactiveModal"
-            class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm" role="dialog"
+            class="fixed inset-0 z-100 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs" role="dialog"
             aria-modal="true">
             <div class="relative w-full max-w-md p-4 animate-float">
                 <div class="bg-white rounded-3xl shadow-2xl overflow-hidden p-8 text-center relative">

@@ -1,6 +1,6 @@
 <x-app-layout title="Laporan Mingguan">
-    <div x-data="{ 
-        showModal: false, 
+    <div x-data="{
+        showModal: false,
         editId: null,
         deleteId: null,
         showDeleteModal: false,
@@ -133,8 +133,8 @@
                 this.isSaving = false;
             }
         },
-        pics: [],  
-        newPic: '', 
+        pics: [],
+        newPic: '',
         suggestions: [],
         showSuggestions: false,
         kegiatanSuggestions: [],
@@ -173,22 +173,22 @@
             this.form.status = data.status;
             this.form.hasil_deskripsi = data.hasil_deskripsi || '';
             this.form.keterangan_tindak_lanjut = data.keterangan_tindak_lanjut || '';
-            
+
             // Handle PICs array
             this.pics = data.pic ? data.pic.split(',').map(p => p.trim()).filter(p => p) : [];
-            
+
             this.isSubmitted = false;
             this.showModal = true;
         },
-        addPic() {  
-            if(this.newPic.trim() !== '') { 
-                this.pics.push(this.newPic.trim()); 
-                this.newPic = ''; 
+        addPic() {
+            if(this.newPic.trim() !== '') {
+                this.pics.push(this.newPic.trim());
+                this.newPic = '';
                 this.showSuggestions = false;
-            } 
-        }, 
-        removePic(index) { 
-            this.pics.splice(index, 1); 
+            }
+        },
+        removePic(index) {
+            this.pics.splice(index, 1);
         },
         async fetchSuggestions() {
             if (this.newPic.trim().length === 0) {
@@ -231,12 +231,12 @@
             this.form.status = kegiatan.status;
             this.form.hasil_deskripsi = kegiatan.hasil_deskripsi || '';
             this.form.keterangan_tindak_lanjut = kegiatan.keterangan_tindak_lanjut || '';
-            
+
             // Auto-fill PIC list as well
             if (kegiatan.pic) {
                 this.pics = kegiatan.pic.split(',').map(p => p.trim()).filter(p => p);
             }
-            
+
             this.showKegiatanSuggestions = false;
         },
         submitForm(e) {
@@ -312,7 +312,7 @@
         },
         async deleteLaporan() {
             if (!this.deleteId) return;
-            
+
             try {
                 const response = await fetch(`/laporan-mingguan/${this.deleteId}`, {
                     method: 'DELETE',
@@ -322,7 +322,7 @@
                         'Content-Type': 'application/json'
                     }
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
@@ -369,7 +369,7 @@
                     <i class="fas fa-magic"></i> Ekstrak Teks
                 </button>
                 <button type="button" @click="showExportModal = true"
-                    class="bg-white text-gray-700 px-3 md:px-5 py-2.5 rounded-xl font-bold border border-gray-200 shadow-sm hover:bg-gray-50 transition flex items-center gap-2 min-h-11 justify-center text-center text-xs sm:text-sm">
+                    class="bg-white text-gray-700 px-3 md:px-5 py-2.5 rounded-xl font-bold border border-gray-200 shadow-xs hover:bg-gray-50 transition flex items-center gap-2 min-h-11 justify-center text-center text-xs sm:text-sm">
                     <i class="fas fa-print text-blue-600"></i> Cetak Laporan
                 </button>
                 @if(auth()->user()->isAdmin())
@@ -525,12 +525,12 @@
                                 <td data-label="Aksi" class="p-4 text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <button @click='openEditModal(@json($row))'
-                                            class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors border border-blue-100/50 shadow-sm flex items-center justify-center"
+                                            class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors border border-blue-100/50 shadow-xs flex items-center justify-center"
                                             aria-label="Edit laporan {{ $row->nama_kegiatan }}" title="Edit Laporan">
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
                                         <button @click="openDeleteModal('{{ $row->hashid }}')"
-                                            class="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors border border-red-100/50 shadow-sm flex items-center justify-center"
+                                            class="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors border border-red-100/50 shadow-xs flex items-center justify-center"
                                             aria-label="Hapus laporan {{ $row->nama_kegiatan }}" title="Hapus Laporan">
                                             <i class="fas fa-trash-alt text-xs"></i>
                                         </button>
@@ -539,7 +539,7 @@
                                 <td data-label="Info" class="p-4 text-center">
                                     <button type="button"
                                         @click='openAuditInfo(@json($auditInfo))'
-                                        class="w-8 h-8 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-700 hover:text-white transition-colors border border-slate-100/70 shadow-sm flex items-center justify-center"
+                                        class="w-8 h-8 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-700 hover:text-white transition-colors border border-slate-100/70 shadow-xs flex items-center justify-center"
                                         aria-label="Info input dan update laporan {{ $row->nama_kegiatan }}" title="Info input dan update">
                                         <i class="fas fa-info text-xs"></i>
                                     </button>
@@ -561,12 +561,12 @@
         <!-- Add Data Modal -->
         <div x-show="showModal" style="display: none;"
             @click="showModal = false"
-            class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
+            class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs"
             x-transition>
             <div @click.stop
-                class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100/50 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 <div
-                    class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-sm z-10">
+                    class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shadow-xs z-10">
                     <div>
                         <p class="text-[0.65rem] font-bold text-gray-400 tracking-[0.2em] uppercase mb-1"
                             x-text="editId ? 'EDIT DATA LAPORAN' : 'PENGISIAN DATA BARU'"></p>
@@ -619,7 +619,7 @@
                                         placeholder="Ketik nama & tekan Enter/+"
                                         class="w-full bg-[#f4f5f7] border-0 rounded-xl pl-4 pr-12 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-[#f4f5f7] transition-all text-gray-700">
                                     <button type="button" @click="addPic"
-                                        class="absolute right-2 w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 rounded-lg md:hover:bg-blue-200 transition-colors shadow-sm"
+                                        class="absolute right-2 w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 rounded-lg md:hover:bg-blue-200 transition-colors shadow-xs"
                                         title="Tambah PIC Baru">
                                         <i class="fas fa-plus text-xs"></i>
                                     </button>
@@ -640,13 +640,13 @@
                                 <div class="mt-3 flex flex-col gap-2">
                                     <template x-for="(pic, index) in pics" :key="index">
                                         <div
-                                            class="flex items-center justify-between bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-xl text-sm text-gray-700">
+                                            class="flex items-center justify-between bg-white border border-gray-200 shadow-xs px-3 py-2 rounded-xl text-sm text-gray-700">
                                             <div class="flex items-center gap-2">
                                                 <i class="fas fa-user-circle text-gray-400"></i>
                                                 <span x-text="pic" class="font-medium"></span>
                                             </div>
                                             <button type="button" @click="removePic(index)"
-                                                class="text-gray-400 hover:text-red-500 hover:bg-red-50 w-7 h-7 flex items-center justify-center rounded-lg transition-colors focus:outline-none"
+                                                class="text-gray-400 hover:text-red-500 hover:bg-red-50 w-7 h-7 flex items-center justify-center rounded-lg transition-colors focus:outline-hidden"
                                                 title="Hapus PIC">
                                                 <i class="fas fa-trash-alt text-[0.7rem]"></i>
                                             </button>
@@ -681,7 +681,7 @@
                             <ul x-show="showKegiatanSuggestions && kegiatanSuggestions.length > 0" x-transition.opacity
                                 class="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] rounded-xl max-h-56 overflow-y-auto py-2">
                                 <li
-                                    class="px-4 py-1.5 text-[0.65rem] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50 sticky top-0 backdrop-blur-sm -mt-2 mb-1">
+                                    class="px-4 py-1.5 text-[0.65rem] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50 sticky top-0 backdrop-blur-xs -mt-2 mb-1">
                                     Riwayat Kegiatan
                                 </li>
                                 <template x-for="kegiatan in kegiatanSuggestions" :key="kegiatan.id">
@@ -700,7 +700,7 @@
                                                 </p>
                                             </div>
                                             <div
-                                                class="shrink-0 text-[0.65rem] font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded hidden group-hover:block">
+                                                class="shrink-0 text-[0.65rem] font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded-sm hidden group-hover:block">
                                                 Auto-fill
                                             </div>
                                         </div>
@@ -801,9 +801,9 @@
 
         <!-- Modal Hapus Data (Realtime) -->
         <div x-show="showDeleteModal" style="display: none;"
-            class="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            class="fixed inset-0 z-200 flex items-center justify-center p-4">
             <!-- Backdrop -->
-            <div x-show="showDeleteModal" x-transition.opacity class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
+            <div x-show="showDeleteModal" x-transition.opacity class="fixed inset-0 bg-gray-900/60 backdrop-blur-xs"
                 @click="closeDeleteModal()"></div>
 
             <!-- Modal Content -->
@@ -813,7 +813,7 @@
                 x-transition:leave="transition ease-in duration-200 transform"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-sm mx-auto overflow-hidden z-10 relative">
+                class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-sm mx-auto overflow-hidden z-10 relative">
 
                 <div class="p-8 text-center">
                     <div
@@ -841,8 +841,8 @@
 
         <!-- Modal Info Input / Update -->
         <div x-show="showInfoModal" style="display: none;"
-            class="fixed inset-0 z-[150] flex items-center justify-center p-4">
-            <div x-show="showInfoModal" x-transition.opacity class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
+            class="fixed inset-0 z-150 flex items-center justify-center p-4">
+            <div x-show="showInfoModal" x-transition.opacity class="fixed inset-0 bg-gray-900/60 backdrop-blur-xs"
                 @click="showInfoModal = false"></div>
 
             <div x-show="showInfoModal" x-transition:enter="transition ease-out duration-300 transform"
@@ -851,7 +851,7 @@
                 x-transition:leave="transition ease-in duration-200 transform"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-md mx-auto overflow-hidden z-10 relative">
+                class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-md mx-auto overflow-hidden z-10 relative">
 
                 <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
                     <div>
@@ -896,8 +896,8 @@
 
         <!-- Modal Konfirmasi Cetak / Export PDF -->
         <div x-show="showExportModal" style="display: none;"
-            class="fixed inset-0 z-[150] flex items-center justify-center p-4">
-            <div x-show="showExportModal" x-transition.opacity class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
+            class="fixed inset-0 z-150 flex items-center justify-center p-4">
+            <div x-show="showExportModal" x-transition.opacity class="fixed inset-0 bg-gray-900/60 backdrop-blur-xs"
                 @click="showExportModal = false"></div>
 
             <div x-show="showExportModal" x-transition:enter="transition ease-out duration-300 transform"
@@ -906,7 +906,7 @@
                 x-transition:leave="transition ease-in duration-200 transform"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-lg mx-auto overflow-hidden z-10 relative">
+                class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-lg mx-auto overflow-hidden z-10 relative">
 
                 <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white">
                     <div>
@@ -985,8 +985,8 @@
 
         <!-- Modal Ekstrak Teks AI (2 langkah: input → review) -->
         <div x-show="showAiModal" style="display: none;"
-            class="fixed inset-0 z-[150] flex items-center justify-center p-4">
-            <div x-show="showAiModal" x-transition.opacity class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
+            class="fixed inset-0 z-150 flex items-center justify-center p-4">
+            <div x-show="showAiModal" x-transition.opacity class="fixed inset-0 bg-gray-900/60 backdrop-blur-xs"
                 @click="showAiModal = false"></div>
 
             <div x-show="showAiModal" x-transition:enter="transition ease-out duration-300 transform"
@@ -995,7 +995,7 @@
                 x-transition:leave="transition ease-in duration-200 transform"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-2xl mx-auto overflow-hidden z-10 relative flex flex-col max-h-[90vh]">
+                class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-2xl mx-auto overflow-hidden z-10 relative flex flex-col max-h-[90vh]">
 
                 <!-- Header -->
                 <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">

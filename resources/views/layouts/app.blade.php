@@ -26,7 +26,7 @@
                 <!-- Brand -->
                 <div class="h-20 flex items-center px-8 border-b border-gray-100 shrink-0">
                     <div
-                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white mr-3 shadow-lg">
+                        class="w-8 h-8 rounded-lg bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white mr-3 shadow-lg">
                         <i class="fas fa-cube text-xs"></i>
                     </div>
                     <span class="text-gray-800 font-bold tracking-wide uppercase text-sm">TIK</span>
@@ -65,12 +65,12 @@
                                         <a href="{{ $href }}" @if($isToggle) @click.prevent="open = !open" @endif @if($isParentPlaceholder) onclick="alert('Menu ini sedang dalam tahap pengembangan.'); return false;" @endif class="flex items-center gap-4 px-4 py-3 rounded-2xl transition-all group cursor-pointer
                                                                                                                   {{ $isActive || $hasActiveChild
                             ? 'bg-white shadow-md shadow-gray-200 transform -translate-y-0.5'
-                            : 'hover:bg-gray-50' 
+                            : 'hover:bg-gray-50'
                                                                                                                   }}">
-                                            <div class="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm transition-all
+                                            <div class="w-8 h-8 rounded-xl flex items-center justify-center shadow-xs transition-all
                                                                                                                         {{ $isActive || $hasActiveChild
-                            ? 'bg-gradient-to-tl from-blue-500 to-indigo-500 text-white shadow-md'
-                            : 'bg-white text-gray-800 border border-gray-100 group-hover:shadow-md' 
+                            ? 'bg-linear-to-tl from-blue-500 to-indigo-500 text-white shadow-md'
+                            : 'bg-white text-gray-800 border border-gray-100 group-hover:shadow-md'
                                                                                                                         }}">
                                                 <i class="{{ $menu->icon ?? 'fas fa-circle' }} text-xs"></i>
                                             </div>
@@ -119,7 +119,7 @@
                 <div class="p-4 bg-gray-50 mt-auto shrink-0">
                     <div class="flex items-center gap-3">
                         <div
-                            class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-blue-600 font-bold border border-gray-100">
+                            class="w-10 h-10 rounded-xl bg-white shadow-xs flex items-center justify-center text-blue-600 font-bold border border-gray-100">
                             {{ substr(Auth::user()->name, 0, 1) }}
                         </div>
                         <div class="flex-1 overflow-hidden">
@@ -132,13 +132,13 @@
         </aside>
 
         <!-- Mobile Sidebar Overlay -->
-        <div x-show="mobileMenuOpen" 
+        <div x-show="mobileMenuOpen"
              style="display: none;"
-             class="fixed inset-0 z-[60] md:hidden" 
+             class="fixed inset-0 z-60 md:hidden"
              x-cloak>
             <!-- Backdrop -->
-            <div @click="mobileMenuOpen = false" 
-                 class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
+            <div @click="mobileMenuOpen = false"
+                 class="fixed inset-0 bg-gray-900/60 backdrop-blur-xs transition-opacity"
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0"
                  x-transition:enter-end="opacity-100"
@@ -155,11 +155,11 @@
                    x-transition:leave="transition ease-in duration-200"
                    x-transition:leave-start="translate-x-0"
                    x-transition:leave-end="-translate-x-full">
-                
+
                 <!-- Brand Mobile -->
                 <div class="h-20 flex items-center px-8 border-b border-gray-100 shrink-0 justify-between">
                     <div class="flex items-center">
-                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white mr-3 shadow-lg">
+                        <div class="w-8 h-8 rounded-lg bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white mr-3 shadow-lg">
                             <i class="fas fa-cube text-xs"></i>
                         </div>
                         <span class="text-gray-800 font-bold tracking-wide uppercase text-sm">TIK</span>
@@ -195,8 +195,8 @@
 
                             <div x-data="{ open: {{ $isActive || $hasActiveChild ? 'true' : 'false' }} }">
                                 <a href="{{ $href }}" @if($isToggle) @click.prevent="open = !open" @endif class="flex items-center gap-4 px-4 py-3 rounded-2xl transition-all group cursor-pointer
-                                    {{ $isActive || $hasActiveChild ? 'bg-blue-50 text-blue-600 shadow-sm' : 'hover:bg-gray-50' }}">
-                                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm transition-all
+                                    {{ $isActive || $hasActiveChild ? 'bg-blue-50 text-blue-600 shadow-xs' : 'hover:bg-gray-50' }}">
+                                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shadow-xs transition-all
                                         {{ $isActive || $hasActiveChild ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-800 border border-gray-100' }}">
                                         <i class="{{ $menu->icon ?? 'fas fa-circle' }} text-xs"></i>
                                     </div>
@@ -229,7 +229,7 @@
                 <!-- Profile Mobile -->
                 <div class="p-4 bg-gray-50 mt-auto shrink-0 border-t border-gray-100">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-blue-600 font-bold border border-gray-100">
+                        <div class="w-10 h-10 rounded-xl bg-white shadow-xs flex items-center justify-center text-blue-600 font-bold border border-gray-100">
                             {{ substr(Auth::user()->name, 0, 1) }}
                         </div>
                         <div class="flex-1 overflow-hidden">

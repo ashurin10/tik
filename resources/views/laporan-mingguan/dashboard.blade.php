@@ -7,7 +7,7 @@
                 <p class="text-gray-500 text-sm">Ringkasan data kegiatan TIK dan Persandian</p>
             </div>
             <a href="{{ route('laporan-mingguan.index') }}"
-                class="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-bold py-2.5 px-5 rounded-xl shadow-sm hover:shadow-md transition-all text-sm">
+                class="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-bold py-2.5 px-5 rounded-xl shadow-xs hover:shadow-md transition-all text-sm">
                 <i class="fas fa-list"></i> Lihat Data Laporan
             </a>
         </div>
@@ -19,7 +19,7 @@
                 <div class="absolute -top-4 -right-4 w-24 h-24 bg-blue-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
                 <div class="relative">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tl from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-200/50">
+                        <div class="w-12 h-12 rounded-2xl bg-linear-to-tl from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-200/50">
                             <i class="fas fa-clipboard-list text-white"></i>
                         </div>
                         <span class="text-[0.65rem] font-bold text-gray-400 uppercase tracking-wider">Total</span>
@@ -34,7 +34,7 @@
                 <div class="absolute -top-4 -right-4 w-24 h-24 bg-green-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
                 <div class="relative">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tl from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-200/50">
+                        <div class="w-12 h-12 rounded-2xl bg-linear-to-tl from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-200/50">
                             <i class="fas fa-check-circle text-white"></i>
                         </div>
                         <span class="text-[0.65rem] font-bold text-green-500 uppercase tracking-wider">Selesai</span>
@@ -49,7 +49,7 @@
                 <div class="absolute -top-4 -right-4 w-24 h-24 bg-orange-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
                 <div class="relative">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tl from-orange-400 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-200/50">
+                        <div class="w-12 h-12 rounded-2xl bg-linear-to-tl from-orange-400 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-200/50">
                             <i class="fas fa-spinner text-white"></i>
                         </div>
                         <span class="text-[0.65rem] font-bold text-orange-500 uppercase tracking-wider">Berjalan</span>
@@ -64,7 +64,7 @@
                 <div class="absolute -top-4 -right-4 w-24 h-24 bg-red-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
                 <div class="relative">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tl from-red-400 to-rose-500 flex items-center justify-center shadow-lg shadow-red-200/50">
+                        <div class="w-12 h-12 rounded-2xl bg-linear-to-tl from-red-400 to-rose-500 flex items-center justify-center shadow-lg shadow-red-200/50">
                             <i class="fas fa-pause-circle text-white"></i>
                         </div>
                         <span class="text-[0.65rem] font-bold text-red-500 uppercase tracking-wider">Tertunda</span>
@@ -128,7 +128,7 @@
                             <span class="text-sm font-bold text-gray-800">{{ $prioritasTinggi }}</span>
                         </div>
                         <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                            <div class="bg-gradient-to-r from-red-500 to-rose-400 h-3 rounded-full transition-all duration-700" style="width: {{ ($prioritasTinggi / $maxPrioritas) * 100 }}%"></div>
+                            <div class="bg-linear-to-r from-red-500 to-rose-400 h-3 rounded-full transition-all duration-700" style="width: {{ ($prioritasTinggi / $maxPrioritas) * 100 }}%"></div>
                         </div>
                     </div>
                     <!-- Sedang -->
@@ -140,7 +140,7 @@
                             <span class="text-sm font-bold text-gray-800">{{ $prioritasSedang }}</span>
                         </div>
                         <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                            <div class="bg-gradient-to-r from-orange-500 to-amber-400 h-3 rounded-full transition-all duration-700" style="width: {{ ($prioritasSedang / $maxPrioritas) * 100 }}%"></div>
+                            <div class="bg-linear-to-r from-orange-500 to-amber-400 h-3 rounded-full transition-all duration-700" style="width: {{ ($prioritasSedang / $maxPrioritas) * 100 }}%"></div>
                         </div>
                     </div>
                     <!-- Rendah -->
@@ -152,7 +152,7 @@
                             <span class="text-sm font-bold text-gray-800">{{ $prioritasRendah }}</span>
                         </div>
                         <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                            <div class="bg-gradient-to-r from-green-500 to-emerald-400 h-3 rounded-full transition-all duration-700" style="width: {{ ($prioritasRendah / $maxPrioritas) * 100 }}%"></div>
+                            <div class="bg-linear-to-r from-green-500 to-emerald-400 h-3 rounded-full transition-all duration-700" style="width: {{ ($prioritasRendah / $maxPrioritas) * 100 }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -219,7 +219,7 @@
                     @foreach($monthlyTrend as $month)
                         <div class="flex flex-col items-center flex-1 gap-2">
                             <span class="text-xs font-bold text-gray-600">{{ $month['count'] }}</span>
-                            <div class="w-full bg-gradient-to-t from-blue-500 to-indigo-400 rounded-t-xl shadow-md shadow-blue-100 transition-all hover:from-blue-600 hover:to-indigo-500"
+                            <div class="w-full bg-linear-to-t from-blue-500 to-indigo-400 rounded-t-xl shadow-md shadow-blue-100 transition-all hover:from-blue-600 hover:to-indigo-500"
                                  style="height: {{ max(($month['count'] / $maxMonthly) * 100, 4) }}%; min-height: 6px;">
                             </div>
                             <span class="text-[0.6rem] text-gray-400 font-bold text-center leading-tight">{{ $month['label'] }}</span>
@@ -236,7 +236,7 @@
                     @foreach($weeklyTrend as $week)
                         <div class="flex flex-col items-center flex-1 gap-2">
                             <span class="text-xs font-bold text-gray-600">{{ $week['count'] }}</span>
-                            <div class="w-full bg-gradient-to-t from-purple-500 to-violet-400 rounded-t-xl shadow-md shadow-purple-100 transition-all hover:from-purple-600 hover:to-violet-500"
+                            <div class="w-full bg-linear-to-t from-purple-500 to-violet-400 rounded-t-xl shadow-md shadow-purple-100 transition-all hover:from-purple-600 hover:to-violet-500"
                                  style="height: {{ max(($week['count'] / $maxWeekly) * 100, 4) }}%; min-height: 6px;">
                             </div>
                             <span class="text-[0.6rem] text-gray-400 font-bold text-center leading-tight">{{ $week['label'] }}</span>
@@ -254,9 +254,9 @@
                 <div class="space-y-3">
                     @php $rank = 1; @endphp
                     @forelse($topPics as $picName => $picCount)
-                        <div class="flex items-center gap-3 p-3 rounded-xl {{ $rank === 1 ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100' : 'bg-gray-50/50' }} transition-colors hover:bg-gray-50">
+                        <div class="flex items-center gap-3 p-3 rounded-xl {{ $rank === 1 ? 'bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-100' : 'bg-gray-50/50' }} transition-colors hover:bg-gray-50">
                             <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0
-                                {{ $rank === 1 ? 'bg-gradient-to-tl from-amber-400 to-yellow-400 text-white shadow-md shadow-amber-200' : ($rank === 2 ? 'bg-gray-300 text-white' : ($rank === 3 ? 'bg-orange-300 text-white' : 'bg-gray-100 text-gray-500')) }}">
+                                {{ $rank === 1 ? 'bg-linear-to-tl from-amber-400 to-yellow-400 text-white shadow-md shadow-amber-200' : ($rank === 2 ? 'bg-gray-300 text-white' : ($rank === 3 ? 'bg-orange-300 text-white' : 'bg-gray-100 text-gray-500')) }}">
                                 {{ $rank }}
                             </div>
                             <div class="flex-1 min-w-0">
@@ -277,7 +277,7 @@
                 <div class="space-y-3">
                     @php $locRank = 1; @endphp
                     @forelse($lokasiCounts as $lokasi => $locCount)
-                        <div class="flex items-center gap-3 p-3 rounded-xl {{ $locRank === 1 ? 'bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100' : 'bg-gray-50/50' }} transition-colors hover:bg-gray-50">
+                        <div class="flex items-center gap-3 p-3 rounded-xl {{ $locRank === 1 ? 'bg-linear-to-r from-rose-50 to-pink-50 border border-rose-100' : 'bg-gray-50/50' }} transition-colors hover:bg-gray-50">
                             <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xs font-bold shrink-0">
                                 <i class="fas fa-map-pin"></i>
                             </div>

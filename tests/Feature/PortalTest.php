@@ -5,11 +5,63 @@ namespace Tests\Feature;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PortalTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_admin_can_upload_and_replace_a_portal_image(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['peran' => 'admin']);
+        $data = ['title' => 'Upload Aman', 'url' => 'laporan-mingguan.index'];
+
+        $this->actingAs($admin)->post(route('services.store'), $data + [
+            'image' => UploadedFile::fake()->image('logo.png'),
+        ])->assertSessionHasNoErrors()->assertRedirect(route('dashboard'));
+
+        $service = Service::where('title', 'Upload Aman')->firstOrFail();
+        $oldImage = $service->image;
+        Storage::disk('public')->assertExists($oldImage);
+
+        $this->actingAs($admin)->put(route('services.update', $service), $data + [
+            'image' => UploadedFile::fake()->image('pengganti.jpg'),
+        ])->assertSessionHasNoErrors()->assertRedirect(route('dashboard'));
+
+        Storage::disk('public')->assertMissing($oldImage);
+        Storage::disk('public')->assertExists($service->fresh()->image);
+    }
+
+    public function test_portal_rejects_scripts_and_images_with_executable_extensions(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['peran' => 'admin']);
+        $service = Service::create(['title' => 'Gambar Lama', 'url' => 'laporan-mingguan.index']);
+        $png = UploadedFile::fake()->image('logo.png')->getContent();
+        $data = ['title' => 'Upload Ditolak', 'url' => 'laporan-mingguan.index'];
+
+        foreach (['shell.php', 'shell.phtml', 'shell.phar', 'shell.PNG.php'] as $filename) {
+            $this->actingAs($admin)->post(route('services.store'), $data + [
+                'image' => UploadedFile::fake()->createWithContent($filename, $png),
+            ])->assertSessionHasErrors('image');
+
+            $this->actingAs($admin)->put(route('services.update', $service), $data + [
+                'image' => UploadedFile::fake()->createWithContent($filename, $png),
+            ])->assertSessionHasErrors('image');
+        }
+
+        $script = UploadedFile::fake()->createWithContent('shell.png', '<?php echo "not an image";');
+        $this->actingAs($admin)->post(route('services.store'), $data + [
+            'image' => new UploadedFile($script->getRealPath(), 'shell.png', 'image/png', null, true),
+        ])->assertSessionHasErrors('image');
+
+        $this->assertDatabaseMissing('services', ['title' => 'Upload Ditolak']);
+        $this->assertNull($service->fresh()->image);
+        $this->assertSame([], Storage::disk('public')->allFiles());
+    }
 
     public function test_authenticated_user_can_view_portal(): void
     {
