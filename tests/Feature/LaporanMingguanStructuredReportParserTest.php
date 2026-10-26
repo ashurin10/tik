@@ -13,6 +13,122 @@ class LaporanMingguanStructuredReportParserTest extends TestCase
 
     private const EXAMPLE = 'Hari, Tanggal : Jumat, 16 Oktober 2026 Nama Kegiatan : Membuat desain header gform dan [s.id](https://s.id) webinar pesanmanis Lokasi : Diskominfo Nama Pelaksana : Alfian Ket. Kegiatan : - Hasil Kegiatan : Desain Header Kendala : - Foto : Terlampir.';
 
+    public function test_creation_activities_use_membuat_and_preserve_explicit_verbs(): void
+    {
+        $examples = [
+            'Pembuatan formulir laporan Diskominfo' => 'Membuat formulir laporan Diskominfo',
+            'Pembuatan desain header webinar' => 'Membuat desain header webinar',
+            'Desain header webinar pesanmanis' => 'Membuat desain header webinar pesanmanis',
+            'Desain poster Diskominfo' => 'Membuat desain poster Diskominfo',
+            'Pembuatan SK tim teknis' => 'Membuat SK tim teknis',
+            'Membuat laporan mingguan' => 'Membuat laporan mingguan',
+            'Menyusun laporan mingguan' => 'Menyusun laporan mingguan',
+            'Laporan mingguan' => 'Menyusun laporan mingguan',
+            'Rapat pembuatan desain laporan' => 'Menghadiri rapat pembuatan desain laporan',
+            'Pendataan berkas' => 'Menginventarisasi pendataan berkas',
+            'Proses distribusi berkas' => 'Melakukan proses distribusi berkas',
+        ];
+
+        foreach ($examples as $source => $expected) {
+            foreach (["Nama Kegiatan: $source Hasil: Selesai Kendala: -", "Kegiatan: $source"] as $text) {
+                $result = app(LaporanMingguanService::class)->parseText($text);
+                $this->assertSame($expected, $result['nama_kegiatan'], $text);
+            }
+        }
+    }
+
+    public function test_follow_ups_and_explicit_statuses_stay_with_their_own_activity(): void
+    {
+        $text = <<<'TEXT'
+Tanggal: 23 Oktober 2026
+Nama Kegiatan: Memeriksa input data untuk keperluan Audit BPK BSSN
+Lokasi: Diskominfo
+PIC: Saeful
+Hasil Kegiatan: Aman Terkendali
+Status: Selesai
+Kendala: -
+Tindak Lanjut: Arsipkan hasil pemeriksaan.
+Kirim catatan kepada auditor.
+Nama Kegiatan: Melakukan backup server
+Lokasi: Ruang server
+PIC: Dedi
+Hasil Kegiatan: Proses backup berjalan
+Status: Berjalan
+Keterangan Tindak Lanjut: Verifikasi salinan backup besok.
+Nama Kegiatan: Membuat desain poster
+PIC: Alfian
+Hasil: Draf poster
+Status: Berjalan
+Kendala: -
+TEXT;
+
+        $response = $this->actingAs(User::factory()->create())
+            ->postJson(route('laporan-mingguan.parse-text'), ['text' => $text])
+            ->assertOk()
+            ->assertJsonCount(3)
+            ->assertJsonPath('0.hasil_deskripsi', 'Aman Terkendali')
+            ->assertJsonPath('0.status', 'Selesai')
+            ->assertJsonPath('0.keterangan_tindak_lanjut', "Arsipkan hasil pemeriksaan.\nKirim catatan kepada auditor.")
+            ->assertJsonPath('1.status', 'Berjalan')
+            ->assertJsonPath('1.keterangan_tindak_lanjut', 'Verifikasi salinan backup besok.')
+            ->assertJsonPath('2.hasil_deskripsi', 'Draf poster')
+            ->assertJsonPath('2.keterangan_tindak_lanjut', '');
+
+        $this->actingAs(User::factory()->create())
+            ->postJson(route('laporan-mingguan.bulk-store'), ['items' => $response->json()])
+            ->assertOk()->assertJsonPath('count', 3);
+
+        $this->assertDatabaseHas('laporan_mingguans', [
+            'nama_kegiatan' => 'Melakukan backup server',
+            'keterangan_tindak_lanjut' => 'Verifikasi salinan backup besok.',
+        ]);
+        $this->assertDatabaseHas('laporan_mingguans', [
+            'nama_kegiatan' => 'Membuat desain poster',
+            'keterangan_tindak_lanjut' => '',
+        ]);
+    }
+
+    public function test_missing_follow_ups_are_not_invented_for_any_report_format(): void
+    {
+        foreach ([
+            'Nama Kegiatan: Melakukan backup server Hasil: Backup selesai Kendala: -',
+            'Melakukan backup server selesai.',
+            "Document from Dedi\nlaporan backup.pdf\n1.2 MB\nTerlampir laporan backup",
+        ] as $text) {
+            $results = app(LaporanMingguanService::class)->parseMultipleTexts($text);
+            $this->assertCount(1, $results);
+            $this->assertSame('', $results[0]['keterangan_tindak_lanjut']);
+        }
+    }
+
+    public function test_explicit_follow_up_takes_precedence_over_obstacles_and_can_be_empty(): void
+    {
+        foreach (['-', '', 'Hubungi penyedia kabel.'] as $followUp) {
+            $text = "Nama Kegiatan: Memperbaiki jaringan Hasil: Kabel diperiksa Kendala: Menunggu kabel baru Status: Berjalan Prioritas: Tinggi Tindak Lanjut: $followUp Foto: Terlampir.";
+            $result = app(LaporanMingguanService::class)->parseText($text);
+
+            $this->assertSame('Kabel diperiksa', $result['hasil_deskripsi']);
+            $this->assertSame('Berjalan', $result['status']);
+            $this->assertSame('Tinggi', $result['prioritas']);
+            $this->assertSame($followUp === '-' ? '' : $followUp, $result['keterangan_tindak_lanjut']);
+        }
+    }
+
+    public function test_free_text_and_document_follow_ups_are_read_without_polluting_description(): void
+    {
+        foreach ([
+            "Melakukan audit server\nHasil: Pemeriksaan selesai\nTindak Lanjut: Kirim catatan kepada auditor.",
+            "Document from Saeful\nlaporan audit.pdf\n1.2 MB\nPemeriksaan selesai\nTindak Lanjut: Kirim catatan kepada auditor.",
+        ] as $text) {
+            $results = app(LaporanMingguanService::class)->parseMultipleTexts($text);
+            $this->assertCount(1, $results);
+            $result = $results[0];
+
+            $this->assertSame('Pemeriksaan selesai', $result['hasil_deskripsi']);
+            $this->assertSame('Kirim catatan kepada auditor.', $result['keterangan_tindak_lanjut']);
+        }
+    }
+
     public function test_parse_endpoint_extracts_each_field_from_single_line_report(): void
     {
         $user = User::factory()->create(['peran' => 'user']);

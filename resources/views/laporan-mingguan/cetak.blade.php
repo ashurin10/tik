@@ -7,7 +7,7 @@
     <style>
         @page {
             size: A4 landscape;
-            margin: 15mm 20mm 20mm 20mm; /* Extra bottom margin for footer */
+            margin: 12mm;
         }
         body {
             font-family: "Arial", sans-serif;
@@ -15,7 +15,7 @@
             background: #fff;
             margin: 0;
             padding: 0;
-            font-size: 11pt;
+            font-size: 10pt;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -24,18 +24,18 @@
         .kop-surat {
             display: flex;
             align-items: center;
-            justify-content: center; /* Center everything horizontally */
+            justify-content: center;
             padding-bottom: 5px;
             margin-bottom: 2px;
         }
         .kop-surat-inner {
-            border-bottom: 5px solid #000; /* Made bottom bolder to match image */
-            padding-bottom: 2px;
-            margin-bottom: 20px;
+            border-bottom: 3px solid #000;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
         }
         .logo-container {
-            width: 100px;
-            margin-right: 15px; /* Sits right next to the text like the image */
+            width: 76px;
+            margin-right: 15px;
             flex-shrink: 0;
         }
         .logo {
@@ -47,32 +47,34 @@
         }
         .kop-text h2 {
             margin: 0;
-            font-size: 16pt; /* Make Government font bigger */
+            font-size: 14pt;
             font-weight: normal;
         }
         .kop-text h1 {
             margin: 2px 0 5px 0;
-            font-size: 18pt; /* Make Dinosaur bolder/bigger */
+            font-size: 16pt;
             font-weight: bold;
         }
         .kop-text p {
             margin: 0;
-            font-size: 11pt; /* Make address slightly bigger */
+            font-size: 10pt;
         }
 
         /* Info Laporan */
         .info-buku {
-            margin-bottom: 15px;
-            margin-top: 10px;
+            margin-bottom: 10px;
+            margin-top: 8px;
+            break-inside: avoid;
+            break-after: avoid;
         }
         .info-title {
             font-weight: bold;
-            font-size: 11pt;
+            font-size: 10pt;
             margin: 0 0 2px 0;
         }
         .info-periode {
             font-weight: bold;
-            font-size: 11pt;
+            font-size: 10pt;
             margin: 0;
         }
 
@@ -84,15 +86,18 @@
             margin-bottom: 0;
             page-break-inside: auto;
         }
-        tr { 
-            page-break-inside: avoid; 
-            page-break-after: auto; 
+        tbody {
+            break-inside: auto;
+        }
+        tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
         }
         th, td {
             border: 1px solid #000;
-            padding: 5px;
+            padding: 3px 4px;
             vertical-align: top;
-            font-size: 10pt;
+            font-size: 9.5pt;
             line-height: 1.25;
             overflow-wrap: anywhere;
             word-break: normal;
@@ -105,51 +110,42 @@
             overflow-wrap: normal;
         }
         
-        .col-no { width: 4%; text-align: center; }
-        .col-tanggal { width: 9%; }
+        .col-no { width: 3%; text-align: center; }
+        .col-tanggal { width: 8%; }
         .col-kegiatan { width: 23%; }
-        .col-lokasi { width: 11%; text-align: center; }
-        .col-hasil { width: 16%; }
-        .col-prioritas { width: 7%; text-align: center; }
-        .col-pic { width: 10%; }
-        .col-status { width: 7%; text-align: center; }
-        .col-tindak { width: 13%; }
+        .col-lokasi { width: 9%; text-align: center; }
+        .col-hasil { width: 17%; }
+        .col-prioritas { width: 6%; text-align: center; }
+        .col-pic { width: 9%; }
+        .col-status { width: 6%; text-align: center; }
+        .col-tindak { width: 19%; }
         td.col-kegiatan, td.col-lokasi, td.col-hasil, td.col-pic, td.col-tindak {
             white-space: pre-line;
-        }
-        .table-signature-group {
-            break-inside: avoid;
-            page-break-inside: avoid;
-        }
-        td.signature-cell {
-            border: 0;
-            padding: 0;
-            font-size: 11pt;
         }
 
         /* Tanda Tangan */
         .ttd-container {
             width: 100%;
-            margin-top: 10mm;
-            display: flex;
-            justify-content: flex-end;
+            margin-top: 6mm;
+            display: flow-root;
             break-inside: avoid;
             page-break-inside: avoid;
         }
         .ttd-box {
-            width: 320px;
+            width: 80mm;
             max-width: 100%;
+            margin-left: auto;
             text-align: left;
         }
         .ttd-tanggal {
             margin-bottom: 3px;
         }
         .ttd-jabatan {
-            margin-bottom: 12mm;
+            margin-bottom: 8mm;
             min-height: 15px;
         }
         .ttd-placeholder {
-            margin-bottom: 12mm;
+            margin-bottom: 8mm;
             white-space: pre;
         }
         .ttd-nama {
@@ -158,7 +154,16 @@
         }
 
 
-        /* Watermark (Optional for print robustness) */
+        @media screen {
+            html { background: #e5e7eb; }
+            body {
+                box-sizing: border-box;
+                max-width: 297mm;
+                margin: 24px auto;
+                padding: 12mm;
+            }
+        }
+
         @media print {
             .no-print { display: none; }
             th {
@@ -168,20 +173,10 @@
             thead {
                 display: table-header-group;
             }
-            tfoot {
-                display: table-footer-group;
-            }
         }
     </style>
 </head>
 <body onload="window.print()">
-    @php
-        $laporanCount = count($laporans);
-        $carryRowCount = !empty($penandatangan) && $laporanCount > 0 ? min(2, $laporanCount) : 0;
-        $mainLaporans = $carryRowCount > 0 ? $laporans->slice(0, $laporanCount - $carryRowCount)->values() : $laporans;
-        $signatureLaporans = $carryRowCount > 0 ? $laporans->slice($laporanCount - $carryRowCount)->values() : collect();
-    @endphp
-
     <!-- Container Utama -->
     <div class="kop-surat-inner">
         <div class="kop-surat">
@@ -231,9 +226,9 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($mainLaporans as $index => $row)
+            @forelse($laporans as $row)
             <tr>
-                <td class="col-no">{{ $index + 1 }}</td>
+                <td class="col-no">{{ $loop->iteration }}</td>
                 <td class="col-tanggal">{{ \Carbon\Carbon::parse($row->tanggal)->locale('id')->isoFormat('D MMMM Y') }}</td>
                 <td class="col-kegiatan">{{ $row->nama_kegiatan }}</td>
                 <td class="col-lokasi">{{ $row->lokasi }}</td>
@@ -243,48 +238,28 @@
                 <td class="col-status">{{ $row->status }}</td>
                 <td class="col-tindak">{{ $row->keterangan_tindak_lanjut ?? '-' }}</td>
             </tr>
-            @endforeach
-            @if($laporanCount === 0)
+            @empty
             <tr>
                 <td colspan="9" style="text-align: center; padding: 20px;">Tidak ada kegiatan pada periode ini.</td>
             </tr>
-            @endif
+            @endforelse
         </tbody>
-        <!-- Baris terakhir dan tanda tangan tetap memakai grid tabel yang sama. -->
-        @if(!empty($penandatangan))
-        <tbody class="table-signature-group">
-            @foreach($signatureLaporans as $index => $row)
-            <tr>
-                <td class="col-no">{{ $mainLaporans->count() + $index + 1 }}</td>
-                <td class="col-tanggal">{{ \Carbon\Carbon::parse($row->tanggal)->locale('id')->isoFormat('D MMMM Y') }}</td>
-                <td class="col-kegiatan">{{ $row->nama_kegiatan }}</td>
-                <td class="col-lokasi">{{ $row->lokasi }}</td>
-                <td class="col-hasil">{{ $row->hasil_deskripsi ?? '-' }}</td>
-                <td class="col-prioritas">{{ $row->prioritas }}</td>
-                <td class="col-pic">{{ str_replace(',', ', ', $row->pic) }}</td>
-                <td class="col-status">{{ $row->status }}</td>
-                <td class="col-tindak">{{ $row->keterangan_tindak_lanjut ?? '-' }}</td>
-            </tr>
-            @endforeach
-            <tr>
-                <td colspan="9" class="signature-cell">
-                    <div class="ttd-container">
-                        <div class="ttd-box">
-                            <div class="ttd-tanggal">Subang, {{ !empty($tanggalTtd) ? \Carbon\Carbon::parse($tanggalTtd)->locale('id')->isoFormat('D MMMM Y') : \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}</div>
-                            <div style="margin-bottom: 3px;">Ditandatangani secara elektronik oleh</div>
-                            <div class="ttd-jabatan">{{ $jabatan }}</div>
-                            <div class="ttd-placeholder" style="padding-left: 1em;">&nbsp;${ttd_pengirim}</div>
-                            <div class="ttd-nama">{{ $penandatangan }}</div>
-                            @if(!empty($pangkat))
-                            <div class="ttd-pangkat">{{ $pangkat }}</div>
-                            @endif
-                        </div>
-                    </div>
-                </td>
-            </tr>
-        </tbody>
-        @endif
     </table>
+
+    @if(!empty($penandatangan))
+    <div class="ttd-container">
+        <div class="ttd-box">
+            <div class="ttd-tanggal">Subang, {{ !empty($tanggalTtd) ? \Carbon\Carbon::parse($tanggalTtd)->locale('id')->isoFormat('D MMMM Y') : \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}</div>
+            <div style="margin-bottom: 3px;">Ditandatangani secara elektronik oleh</div>
+            <div class="ttd-jabatan">{{ $jabatan }}</div>
+            <div class="ttd-placeholder" style="padding-left: 1em;">&nbsp;${ttd_pengirim}</div>
+            <div class="ttd-nama">{{ $penandatangan }}</div>
+            @if(!empty($pangkat))
+            <div class="ttd-pangkat">{{ $pangkat }}</div>
+            @endif
+        </div>
+    </div>
+    @endif
 
 </body>
 </html>

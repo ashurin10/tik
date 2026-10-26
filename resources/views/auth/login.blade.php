@@ -145,7 +145,7 @@
     <!-- Generic Error Modal (Email, Password, Verification) -->
     @if ($errors->any())
         <div id="errorModal" class="fixed inset-0 z-100 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs"
-            role="dialog" aria-modal="true">
+            style="z-index: 100;" role="dialog" aria-modal="true">
             <div class="relative w-full max-w-md p-4 animate-float">
                 <div class="bg-white rounded-3xl shadow-2xl overflow-hidden p-8 text-center relative">
                     <!-- Close Button -->
@@ -182,8 +182,8 @@
     <!-- Inactive Account Modal -->
     @if (session('account_inactive'))
         <div id="inactiveModal"
-            class="fixed inset-0 z-100 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs" role="dialog"
-            aria-modal="true">
+            class="fixed inset-0 z-100 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs"
+            style="z-index: 100;" role="dialog" aria-modal="true">
             <div class="relative w-full max-w-md p-4 animate-float">
                 <div class="bg-white rounded-3xl shadow-2xl overflow-hidden p-8 text-center relative">
                     <!-- Close Button -->

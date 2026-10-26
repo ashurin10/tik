@@ -149,6 +149,17 @@
             hasil_deskripsi: '',
             keterangan_tindak_lanjut: ''
         },
+        clearOutdatedAutomaticFollowUp() {
+            const automaticFollowUps = {
+                'Kegiatan masih dalam proses pelaksanaan dan akan diselesaikan sesuai jadwal.': 'Berjalan',
+                'Menunggu penyelesaian kendala yang ada sebelum kegiatan dapat dilanjutkan.': 'Tertunda',
+                'Kegiatan telah selesai dilaksanakan.': 'Selesai'
+            };
+            const expectedStatus = automaticFollowUps[this.form.keterangan_tindak_lanjut];
+            if (expectedStatus && expectedStatus !== this.form.status) {
+                this.form.keterangan_tindak_lanjut = '';
+            }
+        },
         openCreateModal() {
             this.editId = null;
             this.cameFromAiModal = false;
@@ -173,6 +184,7 @@
             this.form.status = data.status;
             this.form.hasil_deskripsi = data.hasil_deskripsi || '';
             this.form.keterangan_tindak_lanjut = data.keterangan_tindak_lanjut || '';
+            this.clearOutdatedAutomaticFollowUp();
 
             // Handle PICs array
             this.pics = data.pic ? data.pic.split(',').map(p => p.trim()).filter(p => p) : [];
@@ -228,9 +240,6 @@
             this.form.nama_kegiatan = kegiatan.nama_kegiatan;
             this.form.lokasi = kegiatan.lokasi;
             this.form.prioritas = kegiatan.prioritas;
-            this.form.status = kegiatan.status;
-            this.form.hasil_deskripsi = kegiatan.hasil_deskripsi || '';
-            this.form.keterangan_tindak_lanjut = kegiatan.keterangan_tindak_lanjut || '';
 
             // Auto-fill PIC list as well
             if (kegiatan.pic) {
@@ -740,10 +749,10 @@
                             <div class="col-span-2 md:col-span-1">
                                 <label class="block text-[0.7rem] font-medium text-gray-500 mb-1.5 ml-1">Status <span
                                         class="text-red-500">*</span></label>
-                                <select name="status" x-model="form.status" required
+                                <select name="status" x-model="form.status" @change="clearOutdatedAutomaticFollowUp()" required
                                     class="w-full bg-[#f4f5f7] border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-[#f4f5f7] transition-all text-gray-700">
                                     <option value="Selesai">Selesai</option>
-                                    <option value="Berjalan" selected>Berjalan</option>
+                                    <option value="Berjalan">Berjalan</option>
                                     <option value="Tertunda">Tertunda</option>
                                 </select>
                             </div>
@@ -1055,6 +1064,9 @@
                                             :class="{'bg-red-100 text-red-700': item.prioritas==='Tinggi', 'bg-orange-100 text-orange-700': item.prioritas==='Sedang', 'bg-green-100 text-green-700': item.prioritas==='Rendah'}"
                                             x-text="item.prioritas"></span>
                                     </div>
+                                    <p class="mt-2 text-xs text-gray-600 whitespace-pre-line break-words">
+                                        <span class="font-semibold">Tindak lanjut: </span><span x-text="item.keterangan_tindak_lanjut || 'Tidak disebutkan dalam teks.'"></span>
+                                    </p>
                                 </div>
                                 <!-- Tombol Edit -->
                                 <button type="button" @click.stop="openSingleResult(index)"

@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 class LaporanMingguanService
 {
+    private const REPORT_LABELS = 'Tanggal|Nama Kegiatan|Lokasi|Nama Pelaksana|Keterangan|Hasil Kegiatan|Kendala|Tindak Lanjut|Status|Prioritas|Foto';
+
     public function getDuplicateKeys($laporans)
     {
         return $laporans
@@ -237,7 +239,7 @@ class LaporanMingguanService
     private function normalizeStructuredReportLabels(string $text): string
     {
         // Samakan label sebelum memisahkan kegiatan, termasuk label dalam satu baris.
-        if (!preg_match('/\b(?:tanggal|nama\h+kegiatan)\h*[*_]{0,2}\h*:/iu', $text)) {
+        if (!preg_match('/\b(?:tanggal|nama\h+kegiatan|tindak\h+lanjut)\h*[*_]{0,2}\h*:/iu', $text)) {
             return $text;
         }
 
@@ -249,11 +251,14 @@ class LaporanMingguanService
             'Keterangan' => 'ket\.\h*(?:kegiatan)?|keterangan(?:\h+kegiatan)?',
             'Hasil Kegiatan' => 'hasil(?:\h+kegiatan)?',
             'Kendala' => 'kendala',
+            'Tindak Lanjut' => '(?:(?:keterangan|rencana)\h+)?tindak\h+lanjut',
+            'Status' => 'status(?:\h+kegiatan)?',
+            'Prioritas' => 'prioritas',
             'Foto' => 'foto|dokumentasi',
         ];
         $labelPattern = implode('|', array_map(fn($label) => '(?:' . $label . ')', $labels));
 
-        return trim(preg_replace_callback(
+        $normalized = trim(preg_replace_callback(
             '/(?<![\pL\pN])[*_]{0,2}(?<label>' . $labelPattern . ')\h*[*_]{0,2}\h*:\h*[*_]{0,2}\h*/iu',
             function (array $match) use ($labels): string {
                 foreach ($labels as $canonical => $pattern) {
@@ -266,6 +271,9 @@ class LaporanMingguanService
             },
             $text
         ));
+
+        // Normalisasi label yang sudah berada di awal baris tidak membuat paragraf baru.
+        return preg_replace('/\n{2,}(?=(?:' . self::REPORT_LABELS . ')\h*:)/i', "\n", $normalized);
     }
 
     /**
@@ -518,8 +526,16 @@ class LaporanMingguanService
             if (strlen($first) > 3) $result['nama_kegiatan'] = $this->enrichNamaKegiatan(ucfirst(substr($first, 0, 100)));
         }
 
-        // Auto-generate hasil/deskripsi berdasarkan konteks
-        if (preg_match('/(?:hasil|deskripsi|keterangan)\s*[:=\-]?\s*(.*)/is', $text, $matches) && strlen(trim($matches[1])) > 10) {
+        $fields = $this->extractReportFields($text);
+        $result['keterangan_tindak_lanjut'] = $fields['tindak lanjut'] ?? '';
+        if ($result['keterangan_tindak_lanjut'] === '-') {
+            $result['keterangan_tindak_lanjut'] = '';
+        }
+
+        // Isi kolom berlabel berhenti pada label berikutnya.
+        if (isset($fields['hasil kegiatan']) || isset($fields['keterangan'])) {
+            $result['hasil_deskripsi'] = $fields['hasil kegiatan'] ?? $fields['keterangan'];
+        } elseif (preg_match('/(?:hasil|deskripsi|keterangan)\s*[:=\-]?\s*(.*)/is', $text, $matches) && strlen(trim($matches[1])) > 10) {
             $result['hasil_deskripsi'] = trim($matches[1]);
         } elseif (!empty($result['nama_kegiatan'])) {
             $result['hasil_deskripsi'] = $this->generateHasilOtomatis($result['nama_kegiatan'], $result['status']);
@@ -530,14 +546,6 @@ class LaporanMingguanService
         // Auto-detect prioritas dari konteks jika tidak disebutkan eksplisit
         if ($result['prioritas'] === 'Sedang') {
             $result['prioritas'] = $this->detectPrioritas($result['nama_kegiatan'] . ' ' . $text);
-        }
-
-        // Auto-generate tindak lanjut jika masih kosong
-        if (empty($result['keterangan_tindak_lanjut']) && !empty($result['nama_kegiatan'])) {
-            $result['keterangan_tindak_lanjut'] = $this->generateTindakLanjutOtomatis(
-                $result['nama_kegiatan'],
-                $result['status']
-            );
         }
 
         return $result;
@@ -675,11 +683,20 @@ class LaporanMingguanService
      */
     private function enrichNamaKegiatan(string $namaKegiatan): string
     {
+        $namaKegiatan = trim($namaKegiatan);
         if (empty(trim($namaKegiatan))) return $namaKegiatan;
 
         // Jika sudah diawali kata kerja (prefiks me-, ber-, men-, meng-, mem-, meny-), biarkan
         if (preg_match('/^(?:meng|men|mem|meny|me|ber|di|ter|per)\w{2,}/i', $namaKegiatan)) {
             return $namaKegiatan;
+        }
+
+        // Bentuk kegiatan di awal judul lebih kuat daripada topik laporan/webinar di belakangnya.
+        if (preg_match('/^pembuatan\h+(.+)$/isu', $namaKegiatan, $matches)) {
+            return 'Membuat ' . trim($matches[1]);
+        }
+        if (preg_match('/^(?:desain|design)\b/iu', $namaKegiatan)) {
+            return 'Membuat ' . lcfirst($namaKegiatan);
         }
 
         $lower = strtolower($namaKegiatan);
@@ -739,7 +756,7 @@ class LaporanMingguanService
 
         foreach ($nonTechnicalMap as $verb => $keywords) {
             foreach ($keywords as $kw) {
-                if (str_contains($lower, $kw)) {
+                if (preg_match('/\b' . preg_quote($kw, '/') . '\b/iu', $lower)) {
                     return $verb . ' ' . lcfirst($namaKegiatan);
                 }
             }
@@ -780,7 +797,7 @@ class LaporanMingguanService
 
     private function isStructuredReportLine(string $line): bool
     {
-        return (bool) preg_match('/^(Tanggal|Nama\s+Kegiatan|Lokasi|Nama\s+Pelaksana|Keterangan|Hasil\s+Kegiatan|Kendala|Foto)\h*:/i', trim($line));
+        return (bool) preg_match('/^(?:' . self::REPORT_LABELS . ')\h*:/i', trim($line));
     }
 
     private function findDocumentSenderLineIndex(array $lines, int $fileLineIdx): ?int
@@ -806,6 +823,7 @@ class LaporanMingguanService
         for ($i = $fileLineIdx + 1; $i < count($lines); $i++) {
             $candidate = trim($lines[$i]);
             if ($this->isDocumentFileLine($candidate)) break;
+            if ($this->isStructuredReportLine($candidate)) break;
             if (!$this->isDocumentExportNoiseLine($candidate)) {
                 return $candidate;
             }
@@ -990,9 +1008,10 @@ class LaporanMingguanService
             : $this->generateHasilOtomatis($result['nama_kegiatan'], 'Selesai');
         $result['prioritas']       = $this->detectPrioritas($caption !== '' ? $caption : $docName);
 
-        // Auto tindak lanjut
-        if (empty($result['keterangan_tindak_lanjut'])) {
-            $result['keterangan_tindak_lanjut'] = $this->generateTindakLanjutOtomatis($result['nama_kegiatan'], 'Selesai');
+        $fields = $this->extractReportFields($text);
+        $result['keterangan_tindak_lanjut'] = $fields['tindak lanjut'] ?? '';
+        if ($result['keterangan_tindak_lanjut'] === '-') {
+            $result['keterangan_tindak_lanjut'] = '';
         }
 
         return $result;
@@ -1033,22 +1052,7 @@ class LaporanMingguanService
             'keterangan_tindak_lanjut' => ''
         ];
 
-        // Ambil isi sampai label berikutnya, bukan sampai akhir baris.
-        // Kolom kosong tidak boleh mengambil nilai kolom setelahnya.
-        $labels = 'Tanggal|Nama Kegiatan|Lokasi|Nama Pelaksana|Keterangan|Hasil Kegiatan|Kendala|Foto';
-        preg_match_all(
-            '/^(' . $labels . ')\h*:\h*(.*?)(?=^(?:' . $labels . ')\h*:|\z)/imsu',
-            $text,
-            $matches,
-            PREG_SET_ORDER
-        );
-        $fields = [];
-        foreach ($matches as $match) {
-            $label = strtolower($match[1]);
-            $fields[$label] = $label === 'tanggal'
-                ? trim($match[2])
-                : $this->cleanChatNoise($match[2]);
-        }
+        $fields = $this->extractReportFields($text);
 
         if (!empty($fields['tanggal'])) {
             $parsed = $this->parseTanggalIndonesia($fields['tanggal']);
@@ -1078,111 +1082,40 @@ class LaporanMingguanService
             $result['status'] = 'Tertunda';
         }
 
-        // Auto-generate tindak lanjut berbasis konteks jika masih kosong
-        if (empty($result['keterangan_tindak_lanjut']) && !empty($result['nama_kegiatan'])) {
-            $result['keterangan_tindak_lanjut'] = $this->generateTindakLanjutOtomatis(
-                $result['nama_kegiatan'],
-                $result['status']
-            );
+        if (array_key_exists('tindak lanjut', $fields)) {
+            $result['keterangan_tindak_lanjut'] = $fields['tindak lanjut'] === '-' ? '' : $fields['tindak lanjut'];
+        }
+
+        // Status dan prioritas yang ditulis pengguna lebih kuat daripada tebakan kata kunci.
+        foreach (['status' => ['Selesai', 'Berjalan', 'Tertunda'], 'prioritas' => ['Tinggi', 'Sedang', 'Rendah']] as $field => $allowed) {
+            $value = ucfirst(strtolower($fields[$field] ?? ''));
+            if (in_array($value, $allowed, true)) {
+                $result[$field] = $value;
+            }
         }
 
         return $result;
     }
 
-    /**
-     * Auto-generate kalimat tindak lanjut berbasis konteks nama kegiatan & status.
-     */
-    private function generateTindakLanjutOtomatis(string $namaKegiatan, string $status = 'Selesai'): string
+    private function extractReportFields(string $text): array
     {
-        $lower = strtolower($namaKegiatan);
-
-        // Status Tertunda / Berjalan → kalimat generik sesuai status
-        if ($status === 'Tertunda') {
-            return 'Menunggu penyelesaian kendala yang ada sebelum kegiatan dapat dilanjutkan.';
-        }
-        if ($status === 'Berjalan') {
-            return 'Kegiatan masih dalam proses pelaksanaan dan akan diselesaikan sesuai jadwal.';
-        }
-
-        // -----------------------------------------------------------------------
-        // Lapisan 1: Kegiatan TEKNIS — diperiksa lebih dulu
-        // -----------------------------------------------------------------------
-        $teknis = [
-            ['kw' => ['backup', 'pencadangan'],
-             'kalimat' => 'Data berhasil dicadangkan dan disimpan di lokasi yang aman.'],
-            ['kw' => ['instalasi', 'install', 'setup', 'deploy', 'deployment'],
-             'kalimat' => 'Sistem/perangkat telah berhasil dipasang dan siap digunakan.'],
-            ['kw' => ['konfigurasi', 'config'],
-             'kalimat' => 'Konfigurasi telah diterapkan dan diuji coba dengan hasil baik.'],
-            ['kw' => ['perbaikan', 'repair', 'trouble', 'troubleshoot', 'kerusakan', 'gangguan', 'bug', 'error'],
-             'kalimat' => 'Permasalahan telah berhasil diselesaikan dan sistem kembali berjalan normal.'],
-            ['kw' => ['maintenance', 'pemeliharaan', 'perawatan', 'servis'],
-             'kalimat' => 'Perangkat telah selesai dipelihara dan kembali beroperasi secara optimal.'],
-            ['kw' => ['monitoring', 'pemantauan', 'pantau', 'monitor'],
-             'kalimat' => 'Hasil pemantauan telah dicatat dan akan dijadikan bahan evaluasi.'],
-            ['kw' => ['update', 'upgrade', 'pembaruan', 'patching', 'patch'],
-             'kalimat' => 'Pembaruan berhasil diterapkan dan sistem telah diuji coba.'],
-            ['kw' => ['migrasi', 'migration'],
-             'kalimat' => 'Proses migrasi telah selesai dan data telah diverifikasi.'],
-            ['kw' => ['sinkronisasi', 'sync'],
-             'kalimat' => 'Data telah berhasil disinkronisasi antara sistem/server terkait.'],
-            ['kw' => ['testing', 'pengujian', 'uji coba', 'ujicoba'],
-             'kalimat' => 'Hasil pengujian telah didokumentasikan untuk ditindaklanjuti.'],
-            ['kw' => ['pengecekan', 'cek jaringan', 'cek server', 'cek sistem', 'audit', 'verifikasi', 'validasi', 'inspeksi'],
-             'kalimat' => 'Hasil pengecekan telah dicatat dan akan disampaikan kepada pihak terkait.'],
-            ['kw' => ['inventaris', 'inventarisasi', 'pendataan', 'opname'],
-             'kalimat' => 'Data inventaris telah diperbarui sesuai kondisi terkini.'],
-            ['kw' => ['pengadaan', 'pembelian', 'pemesanan'],
-             'kalimat' => 'Pengadaan telah selesai diproses dan menunggu serah terima barang.'],
-            ['kw' => ['persiapan', 'preparasi'],
-             'kalimat' => 'Persiapan telah selesai dilakukan dan kegiatan siap dilaksanakan.'],
-            ['kw' => ['sosialisasi sistem', 'sosialisasi aplikasi', 'sosialisasi teknis'],
-             'kalimat' => 'Sosialisasi telah disampaikan dan peserta telah memahami materi yang diberikan.'],
-        ];
-
-        foreach ($teknis as $entry) {
-            foreach ($entry['kw'] as $kw) {
-                if (str_contains($lower, $kw)) {
-                    return $entry['kalimat'];
-                }
-            }
+        // Kolom kosong dan multiline berhenti pada label berikutnya dalam kegiatan ini.
+        $labels = self::REPORT_LABELS;
+        preg_match_all(
+            '/^(' . $labels . ')\h*:\h*(.*?)(?=^(?:' . $labels . ')\h*:|\z)/imsu',
+            $text,
+            $matches,
+            PREG_SET_ORDER
+        );
+        $fields = [];
+        foreach ($matches as $match) {
+            $label = strtolower($match[1]);
+            $fields[$label] = $label === 'tanggal'
+                ? trim($match[2])
+                : $this->cleanChatNoise($match[2]);
         }
 
-        // -----------------------------------------------------------------------
-        // Lapisan 2: Kegiatan NON-TEKNIS
-        // -----------------------------------------------------------------------
-        $nonTeknis = [
-            ['kw' => ['rapat', 'meeting', 'pertemuan', 'audiensi'],
-             'kalimat' => 'Hasil rapat akan ditindaklanjuti sesuai kesepakatan bersama.'],
-            ['kw' => ['seminar', 'webinar', 'forum', 'diskusi'],
-             'kalimat' => 'Hasil diskusi dan rekomendasi akan dijadikan bahan tindak lanjut.'],
-            ['kw' => ['workshop', 'pelatihan', 'training', 'diklat', 'bimtek', 'kursus', 'orientasi'],
-             'kalimat' => 'Ilmu dan keterampilan yang diperoleh akan diterapkan dalam pelaksanaan tugas.'],
-            ['kw' => ['sosialisasi'],
-             'kalimat' => 'Hasil sosialisasi akan disebarluaskan kepada pihak-pihak yang belum hadir.'],
-            ['kw' => ['laporan', 'notulen', 'notula', 'berita acara'],
-             'kalimat' => 'Dokumen telah diselesaikan dan siap untuk diserahkan kepada pihak terkait.'],
-            ['kw' => ['surat', 'dokumen', 'proposal', 'draf', 'sk', 'sop'],
-             'kalimat' => 'Dokumen telah diterima dan akan diproses lebih lanjut.'],
-            ['kw' => ['presentasi', 'paparan'],
-             'kalimat' => 'Materi presentasi telah disampaikan dan mendapatkan tanggapan dari peserta.'],
-            ['kw' => ['koordinasi'],
-             'kalimat' => 'Hasil koordinasi akan ditindaklanjuti oleh masing-masing pihak terkait.'],
-            ['kw' => ['konsultasi'],
-             'kalimat' => 'Hasil konsultasi telah diperoleh dan akan dijadikan acuan pelaksanaan.'],
-            ['kw' => ['pendampingan', 'asistensi'],
-             'kalimat' => 'Pendampingan telah diberikan dan pihak terkait siap menjalankan tugasnya.'],
-        ];
-
-        foreach ($nonTeknis as $entry) {
-            foreach ($entry['kw'] as $kw) {
-                if (str_contains($lower, $kw)) {
-                    return $entry['kalimat'];
-                }
-            }
-        }
-
-        return 'Kegiatan telah selesai dilaksanakan.';
+        return $fields;
     }
 
     /**

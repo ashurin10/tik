@@ -13,7 +13,7 @@ class LaporanMingguanExportTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_export_keeps_all_rows_and_signature_in_one_table(): void
+    public function test_export_keeps_rows_in_one_continuous_table_and_signature_in_its_own_block(): void
     {
         $user = User::factory()->create();
         for ($i = 1; $i <= 46; $i++) {
@@ -39,12 +39,13 @@ class LaporanMingguanExportTest extends TestCase
         $this->assertSame(1, $xpath->query('//table')->length);
         $this->assertSame(1, $xpath->query('//table/thead')->length);
         $this->assertSame(9, $xpath->query('//table/colgroup/col')->length);
+        $this->assertSame(1, $xpath->query('//table/tbody')->length);
         $rows = $xpath->query('//table/tbody/tr[count(td) = 9]');
         $this->assertSame(46, $rows->length);
         foreach ($rows as $index => $row) {
             $this->assertSame((string) ($index + 1), trim($row->firstElementChild->textContent));
         }
-        $this->assertSame(1, $xpath->query('//table/tbody[@class="table-signature-group"]//div[@class="ttd-nama"]')->length);
+        $this->assertSame(1, $xpath->query('//table/following-sibling::div[@class="ttd-container"]//div[@class="ttd-nama"]')->length);
         $this->assertSame('Contoh Penandatangan', trim($xpath->query('//div[@class="ttd-nama"]')->item(0)->textContent));
     }
 
