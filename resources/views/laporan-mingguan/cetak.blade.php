@@ -89,6 +89,15 @@
         tbody {
             break-inside: auto;
         }
+        .report-end {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+        .signature-cell {
+            border: 0;
+            padding: 0;
+            white-space: normal;
+        }
         tr {
             break-inside: avoid;
             page-break-inside: avoid;
@@ -126,6 +135,8 @@
         /* Tanda Tangan */
         .ttd-container {
             width: 100%;
+            font-size: 10pt;
+            line-height: 1.25;
             margin-top: 6mm;
             display: flow-root;
             break-inside: avoid;
@@ -261,5 +272,72 @@
     </div>
     @endif
 
+    <script>
+        // Keep the signature with the final activity, including a continuation of an oversized row.
+        function prepareSignature() {
+            const signature = document.querySelector('.ttd-container');
+            if (!signature || signature.closest('table')) return;
+
+            const table = document.querySelector('table');
+            const body = table.tBodies[0];
+            const lastRow = body.lastElementChild;
+            const end = table.createTBody();
+            end.className = 'report-end';
+
+            // Measure at the actual A4 landscape content width, even on a narrow screen.
+            const originalWidth = table.style.width;
+            table.style.width = '273mm';
+            const ruler = document.createElement('div');
+            ruler.style.height = '186mm';
+            document.body.append(ruler);
+            const available = ruler.getBoundingClientRect().height
+                - table.tHead.getBoundingClientRect().height
+                - signature.getBoundingClientRect().height
+                - parseFloat(getComputedStyle(signature).marginTop) - 4;
+            ruler.remove();
+
+            if (lastRow.cells.length === 9 && lastRow.getBoundingClientRect().height > available) {
+                const tail = lastRow.cloneNode(true);
+                tail.setAttribute('aria-label', 'Lanjutan kegiatan terakhir');
+                for (const cell of tail.cells) cell.textContent = '';
+                end.append(tail);
+
+                for (let i = 0; i < lastRow.cells.length; i++) {
+                    const source = lastRow.cells[i];
+                    const target = tail.cells[i];
+                    const text = source.textContent;
+                    target.textContent = text;
+                    if (tail.getBoundingClientRect().height <= available) {
+                        target.textContent = '';
+                        continue;
+                    }
+
+                    // Find a suffix that fits, preserving every character of the source text.
+                    let low = 0, high = text.length;
+                    while (low < high) {
+                        const middle = Math.floor((low + high) / 2);
+                        target.textContent = text.slice(middle);
+                        if (tail.getBoundingClientRect().height <= available) high = middle;
+                        else low = middle + 1;
+                    }
+                    // Prefer a word boundary without making the remaining suffix taller.
+                    const space = text.slice(low).search(/\s/);
+                    const split = space >= 0 ? low + space + 1 : low;
+                    source.textContent = text.slice(0, split);
+                    target.textContent = text.slice(split);
+                }
+            } else {
+                end.append(lastRow);
+            }
+
+            const cell = end.insertRow().insertCell();
+            cell.colSpan = 9;
+            cell.className = 'signature-cell';
+            cell.append(signature);
+            table.style.width = originalWidth;
+        }
+
+        window.addEventListener('beforeprint', prepareSignature);
+    </script>
 </body>
 </html>
