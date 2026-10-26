@@ -152,11 +152,10 @@
             margin-bottom: 3px;
         }
         .ttd-jabatan {
-            margin-bottom: 8mm;
             min-height: 15px;
         }
         .ttd-placeholder {
-            margin-bottom: 8mm;
+            padding-block: 3lh;
             white-space: pre;
         }
         .ttd-nama {
@@ -263,7 +262,7 @@
             <div class="ttd-tanggal">Subang, {{ !empty($tanggalTtd) ? \Carbon\Carbon::parse($tanggalTtd)->locale('id')->isoFormat('D MMMM Y') : \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}</div>
             <div style="margin-bottom: 3px;">Ditandatangani secara elektronik oleh</div>
             <div class="ttd-jabatan">{{ $jabatan }}</div>
-            <div class="ttd-placeholder" style="padding-left: 1em;">&nbsp;${ttd_pengirim}</div>
+            <div class="ttd-placeholder">    ${ttd_pengirim}</div>
             <div class="ttd-nama">{{ $penandatangan }}</div>
             @if(!empty($pangkat))
             <div class="ttd-pangkat">{{ $pangkat }}</div>
